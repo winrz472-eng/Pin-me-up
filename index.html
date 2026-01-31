@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pin Me Up | Team Organizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
@@ -12,9 +12,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.7); }
-        .dark .glass { background: rgba(15, 23, 42, 0.7); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
+        .dark .glass { background: rgba(15, 23, 42, 0.85); }
 
         .modal-overlay {
             background: rgba(0, 0, 0, 0.5);
@@ -50,7 +50,10 @@
 
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        #toast-container { position: fixed; bottom: 20px; right: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        #toast-container > div { pointer-events: auto; margin-left: auto; }
+        @media (max-width: 768px) { #toast-container > div { margin-left: 0; width: 100%; } }
+
         .toast { transform: translateX(100%); transition: transform 0.3s ease; }
         .toast.show { transform: translateX(0); }
 
@@ -69,6 +72,10 @@
         .custom-dropdown-menu { transform-origin: top right; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); transform: scale(0.95); opacity: 0; pointer-events: none; }
         .custom-dropdown-menu.active { transform: scale(1); opacity: 1; pointer-events: auto; }
 
+        /* Sidebar Mobile Transition */
+        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-overlay { transition: opacity 0.3s linear; }
+
         /* --- LANDING PAGE STYLES --- */
         .landing-bg {
             background-color: #0f172a;
@@ -77,14 +84,7 @@
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
         }
-        .blob {
-            position: absolute;
-            filter: blur(80px);
-            opacity: 0.4;
-            animation: blob-bounce 10s infinite ease-in-out;
-            border-radius: 50%;
-            z-index: 0;
-        }
+        .blob { position: absolute; filter: blur(80px); opacity: 0.4; animation: blob-bounce 10s infinite ease-in-out; border-radius: 50%; z-index: 0; }
         .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #f43f5e; animation-delay: 0s; }
         .blob-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #8b5cf6; animation-delay: 2s; }
         .blob-3 { top: 40%; left: 40%; width: 400px; height: 400px; background: #f97316; animation-delay: 4s; }
@@ -95,113 +95,49 @@
             66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
-        .landing-content {
-            z-index: 10;
-        }
-
-        .hero-btn {
-            background-size: 200% auto;
-            transition: 0.5s;
-        }
-        .hero-btn:hover {
-            background-position: right center;
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(244, 63, 94, 0.5);
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        .feature-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-5px);
-            border-color: rgba(244, 63, 94, 0.3);
-        }
+        .landing-content { z-index: 10; }
+        .hero-btn { background-size: 200% auto; transition: 0.5s; }
+        .hero-btn:hover { background-position: right center; transform: scale(1.05); box-shadow: 0 0 30px rgba(244, 63, 94, 0.5); }
+        .feature-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-5px); border-color: rgba(244, 63, 94, 0.3); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 overflow-hidden h-screen flex transition-colors duration-300">
 
     <div id="landing-screen" class="fixed inset-0 z-[250] landing-bg flex items-center justify-center hidden opacity-0 transition-opacity duration-700">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
-
+        <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
         <div class="absolute top-0 left-0 w-full p-8 flex justify-between items-center z-20">
-    <div class="text-white/30 font-black text-xs tracking-[0.3em] cursor-default select-none">Pin me up</div>
-</div>
-
-        <div id="landing-main" class="landing-content text-center px-6 relative transition-all duration-500 transform scale-100 opacity-100">
-            <div class="mb-8 relative inline-block group">
-    <div class="absolute inset-0 bg-rose-500 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-    <img src="upscaled.jpg" alt="Logo" class="w-24 h-24 mx-auto rounded-3xl relative shadow-2xl z-10 object-cover">
-</div>
-
-            <h1 class="text-6xl md:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-sm select-none">
-                Pin me up
-            </h1>
-            <p class="text-slate-400 text-lg md:text-xl font-medium mb-6 tracking-wide">
-    Организуй хаос. Достигай целей.
-</p>
-
-<div class="flex justify-center mb-10">
-    <button onclick="toggleFeatures()" class="text-white/60 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 group px-4 py-2 rounded-lg hover:bg-white/5">
-        <span class="group-hover:text-rose-400 transition-colors">Функции</span>
-        <span class="bg-white/10 p-1 rounded group-hover:bg-rose-500/20 transition-colors">✨</span>
-    </button>
-</div>
-
-<button onclick="startExperience()" class="hero-btn bg-gradient-to-r from-rose-500 via-orange-500 to-rose-500 text-white font-black uppercase text-sm md:text-base px-10 py-5 rounded-2xl shadow-xl tracking-widest cursor-pointer">
-    Начать работу
-</button>
+            <div class="text-white/30 font-black text-xs tracking-[0.3em] cursor-default select-none">Pin me up</div>
         </div>
-
+        <div id="landing-main" class="landing-content text-center px-6 relative transition-all duration-500 transform scale-100 opacity-100">
+             <div class="mb-8 relative inline-block group">
+                <div class="absolute inset-0 bg-rose-500 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                <img src="upscaled.jpg" alt="Logo" class="w-24 h-24 mx-auto rounded-3xl relative shadow-2xl z-10 object-cover">
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-sm select-none">Pin me up</h1>
+            <p class="text-slate-400 text-lg md:text-xl font-medium mb-6 tracking-wide">Организуй хаос. Достигай целей.</p>
+            <div class="flex justify-center mb-10">
+                <button onclick="toggleFeatures()" class="text-white/60 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 group px-4 py-2 rounded-lg hover:bg-white/5">
+                    <span class="group-hover:text-rose-400 transition-colors">Функции</span><span class="bg-white/10 p-1 rounded group-hover:bg-rose-500/20 transition-colors">✨</span>
+                </button>
+            </div>
+            <button onclick="startExperience()" class="hero-btn bg-gradient-to-r from-rose-500 via-orange-500 to-rose-500 text-white font-black uppercase text-sm md:text-base px-10 py-5 rounded-2xl shadow-xl tracking-widest cursor-pointer">Начать работу</button>
+        </div>
         <div id="landing-features" class="landing-content absolute inset-0 flex flex-col items-center justify-center hidden opacity-0 transition-all duration-500 transform scale-95 p-6 z-30">
             <h2 class="text-4xl md:text-5xl font-black text-white mb-10 tracking-tight">Возможности</h2>
-
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl w-full">
-                <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">📆</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Умный календарь</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Переключайтесь между режимами: День, Неделя, Месяц, Год и Диаграмма Ганта.</p>
-                </div>
-                <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">👥</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Команды</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Создавайте команды, приглашайте коллег по ID и управляйте ролями.</p>
-                </div>
-                <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">🏆</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Геймификация</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Выполняйте задачи, получайте рейтинг и соревнуйтесь с коллегами.</p>
-                </div>
-                <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">📎</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Файлы и Дедлайны</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Прикрепляйте документы к задачам и устанавливайте жесткие сроки.</p>
-                </div>
-                <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">🌗</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Темная тема</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Полная поддержка темного режима для комфортной работы ночью.</p>
-                </div>
-                 <div class="feature-card p-6 rounded-2xl">
-                    <div class="text-2xl mb-3">🖱</div>
-                    <h3 class="text-white font-bold text-lg mb-1">Drag & Drop</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Перетаскивайте задачи прямо в сетке календаря для быстрого переноса.</p>
-                </div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">📆</div><h3 class="text-white font-bold text-lg mb-1">Умный календарь</h3><p class="text-slate-400 text-xs leading-relaxed">Режимы: День, Неделя, Месяц, Год, Гант.</p></div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">👥</div><h3 class="text-white font-bold text-lg mb-1">Команды</h3><p class="text-slate-400 text-xs leading-relaxed">Создавайте команды и управляйте ролями.</p></div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🏆</div><h3 class="text-white font-bold text-lg mb-1">Геймификация</h3><p class="text-slate-400 text-xs leading-relaxed">Получайте рейтинг за задачи.</p></div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">📎</div><h3 class="text-white font-bold text-lg mb-1">Файлы и Дедлайны</h3><p class="text-slate-400 text-xs leading-relaxed">Прикрепляйте документы и следите за сроками.</p></div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🌗</div><h3 class="text-white font-bold text-lg mb-1">Темная тема</h3><p class="text-slate-400 text-xs leading-relaxed">Комфортная работа ночью.</p></div>
+                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🖱</div><h3 class="text-white font-bold text-lg mb-1">Drag & Drop</h3><p class="text-slate-400 text-xs leading-relaxed">Перетаскивайте задачи в календаре.</p></div>
             </div>
-
-            <button onclick="toggleFeatures()" class="mt-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2">
-                <span>← Назад</span>
-            </button>
+            <button onclick="toggleFeatures()" class="mt-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2"><span>← Назад</span></button>
         </div>
     </div>
 
     <div id="loader"><div class="spinner"></div></div>
-
     <div id="toast-container"></div>
 
     <div id="auth-screen" class="fixed inset-0 z-[100] bg-slate-900/10 backdrop-blur-xl hidden items-center justify-center p-4 transition-all duration-500">
@@ -211,23 +147,25 @@
                 <input type="text" id="auth-login" placeholder="Логин" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 font-bold transition-all">
                 <input type="password" id="auth-pass" placeholder="Пароль" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 font-bold transition-all">
                 <button onclick="App.auth.handle()" id="auth-btn-main" class="w-full py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-all hover:shadow-lg hover:shadow-rose-500/30">Войти</button>
-                <div class="flex justify-center pt-2">
-                    <button onclick="App.auth.toggleMode()" id="auth-switch-btn" class="text-xs text-slate-500 font-bold uppercase hover:text-rose-500 transition-colors">Нет аккаунта? Зарегистрироваться</button>
-                </div>
+                <div class="flex justify-center pt-2"><button onclick="App.auth.toggleMode()" id="auth-switch-btn" class="text-xs text-slate-500 font-bold uppercase hover:text-rose-500 transition-colors">Нет аккаунта? Зарегистрироваться</button></div>
             </div>
         </div>
     </div>
 
-    <aside class="w-72 bg-white/90 dark:bg-slate-900/90 glass border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col z-10 transition-colors duration-300">
-        <div class="flex items-center gap-3 mb-8">
-            <img src="upscaled.jpg" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 object-cover">
-            <h1 class="text-2xl font-black tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-600 drop-shadow-sm cursor-default">Pin Me Up</h1>
+    <div id="sidebar-overlay" onclick="App.ui.toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden sidebar-overlay opacity-0"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white/95 dark:bg-slate-900/95 glass border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col z-50 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 shadow-2xl md:shadow-none h-full">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <img src="upscaled.jpg" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 object-cover">
+                <h1 class="text-2xl font-black tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-600 drop-shadow-sm cursor-default">Pin Me Up</h1>
+            </div>
+            <button onclick="App.ui.toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-600">✕</button>
         </div>
 
         <div class="mb-6 relative group">
             <button onclick="document.getElementById('team-dropdown').classList.toggle('hidden')" class="w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-xs uppercase flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                <span id="current-team-name" class="truncate mr-2">Личный календарь</span>
-                <span class="text-slate-400">▼</span>
+                <span id="current-team-name" class="truncate mr-2">Личный календарь</span><span class="text-slate-400">▼</span>
             </button>
             <div id="team-dropdown" class="hidden absolute top-full left-0 w-full bg-white dark:bg-slate-800 rounded-xl shadow-xl mt-2 p-2 z-50 border border-slate-100 dark:border-slate-700 transform origin-top transition-all">
                 <div id="team-list-container" class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar"></div>
@@ -257,35 +195,41 @@
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden relative">
-        <header class="h-20 bg-white/50 dark:bg-slate-900/50 glass border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between z-10 shrink-0">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-3">
+        <header class="h-auto md:h-20 bg-white/50 dark:bg-slate-900/50 glass border-b border-slate-200 dark:border-slate-800 px-4 py-4 md:py-0 md:px-8 flex flex-col md:flex-row items-center justify-between z-10 shrink-0 gap-4">
+
+            <div class="flex items-center justify-between w-full md:w-auto gap-4">
+                <button onclick="App.ui.toggleSidebar()" class="md:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+
+                <div class="flex items-center gap-2 md:gap-3">
                      <button onclick="App.calendar.navigate(-1)" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all text-sm font-bold shadow-sm">←</button>
                      <button onclick="App.calendar.navigate(1)" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all text-sm font-bold shadow-sm">→</button>
                 </div>
-                <h2 id="current-date-display" class="text-xl font-black tracking-tight min-w-[180px]"></h2>
-                <div class="relative z-50">
-                    <button id="view-btn" onclick="App.ui.toggleViewDropdown()" class="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800 font-bold text-xs uppercase px-4 py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-w-[110px]">
+                <h2 id="current-date-display" class="text-lg md:text-xl font-black tracking-tight min-w-[140px] text-center md:text-left"></h2>
+            </div>
+
+            <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                <div class="relative z-30">
+                    <button id="view-btn" onclick="App.ui.toggleViewDropdown()" class="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800 font-bold text-xs uppercase px-4 py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                         <span id="current-view-label">Месяц</span>
                         <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" id="view-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="view-dropdown" class="custom-dropdown-menu absolute right-0 top-full mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 p-1.5 overflow-hidden">
-                        <button onclick="App.calendar.switchView('gantt')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-2">Диаграмма Ганта</button>
+                        <button onclick="App.calendar.switchView('gantt')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-2">Гант</button>
                         <button onclick="App.calendar.switchView('day')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">День</button>
                         <button onclick="App.calendar.switchView('week')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">Неделя</button>
                         <button onclick="App.calendar.switchView('month')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">Месяц</button>
                         <button onclick="App.calendar.switchView('year')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Год</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex items-center gap-6">
                 <div class="relative">
                     <button onclick="App.ui.toggleNotifications()" class="p-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:text-rose-500 transition-colors relative border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                         <div id="notif-badge" class="notification-badge"></div>
                     </button>
-                    <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-4 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden transform origin-top-right transition-all">
+                    <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-4 w-72 md:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden transform origin-top-right transition-all">
                         <div class="p-3 border-b dark:border-slate-800 font-black text-[10px] uppercase text-slate-400 bg-slate-50 dark:bg-slate-900/50 flex justify-between">
                             <span>Уведомления</span>
                             <button onclick="App.notifications.clearAll()" class="hover:text-rose-500 transition-colors">Очистить</button>
@@ -293,8 +237,9 @@
                         <div id="notif-list" class="max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 pl-6 border-l border-slate-200 dark:border-slate-800">
-                    <div class="text-right">
+
+                <div class="flex items-center gap-4 pl-0 md:pl-6 border-l-0 md:border-l border-slate-200 dark:border-slate-800">
+                    <div class="text-right hidden md:block">
                         <p id="display-user-name" class="text-sm font-black leading-none mb-1"></p>
                         <p id="display-role" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">User</p>
                     </div>
@@ -303,7 +248,7 @@
             </div>
         </header>
 
-        <div class="flex-1 p-6 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 custom-scrollbar relative" id="calendar-container">
+        <div class="flex-1 p-2 md:p-6 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 custom-scrollbar relative" id="calendar-container">
             <div id="calendar-grid"></div>
         </div>
     </main>
@@ -312,31 +257,19 @@
         <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800">
             <h3 class="text-xl font-black mb-4">Создать команду</h3>
             <input type="text" id="new-team-name" placeholder="Название" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none font-bold mb-4 focus:ring-2 focus:ring-rose-500 transition-all">
-            <div class="flex gap-3">
-                <button onclick="App.ui.closeModal('modal-create-team')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button>
-                <button onclick="App.teams.create()" class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">Создать</button>
-            </div>
+            <div class="flex gap-3"><button onclick="App.ui.closeModal('modal-create-team')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button><button onclick="App.teams.create()" class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">Создать</button></div>
         </div>
     </div>
-
     <div id="modal-invite" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4">
         <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800">
-            <h3 class="text-xl font-black mb-2">Пригласить</h3>
-            <p class="text-xs text-slate-500 mb-4 font-medium">Введите логин или ID пользователя.</p>
-            <input type="text" id="invite-login" placeholder="Логин или ID (#XXXXXX)" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none font-bold mb-4 focus:ring-2 focus:ring-rose-500 transition-all">
-            <div class="flex gap-3">
-                <button onclick="App.ui.closeModal('modal-invite')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button>
-                <button onclick="App.teams.invite()" class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">Пригласить</button>
-            </div>
+             <h3 class="text-xl font-black mb-2">Пригласить</h3><p class="text-xs text-slate-500 mb-4 font-medium">Введите логин или ID пользователя.</p>
+             <input type="text" id="invite-login" placeholder="Логин или ID (#XXXXXX)" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none font-bold mb-4 focus:ring-2 focus:ring-rose-500 transition-all">
+             <div class="flex gap-3"><button onclick="App.ui.closeModal('modal-invite')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button><button onclick="App.teams.invite()" class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">Пригласить</button></div>
         </div>
     </div>
-
     <div id="modal-event" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 border dark:border-slate-800 relative">
-            <div class="flex justify-between items-start mb-6">
-                <h3 class="text-2xl font-black text-rose-500 italic" id="modal-event-title">Задача</h3>
-                <button id="btn-delete-event" onclick="App.events.delete()" class="text-slate-400 hover:text-red-500 transition-colors hidden"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-            </div>
+        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-6 md:p-8 border dark:border-slate-800 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-start mb-6"><h3 class="text-2xl font-black text-rose-500 italic" id="modal-event-title">Задача</h3><button id="btn-delete-event" onclick="App.events.delete()" class="text-slate-400 hover:text-red-500 transition-colors hidden"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div>
             <div class="space-y-4">
                 <div><label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Название</label><input type="text" id="event-name" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none font-bold focus:ring-2 focus:ring-rose-500 transition-all"></div>
                 <div class="grid grid-cols-2 gap-4">
@@ -344,120 +277,48 @@
                     <div><label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Время</label><input type="time" id="event-time" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none font-bold text-sm focus:ring-2 focus:ring-rose-500 transition-all text-slate-600 dark:text-slate-300"></div>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                    <span class="text-xs font-black uppercase text-slate-500">Статус выполнения</span>
+                    <span class="text-xs font-black uppercase text-slate-500">Статус</span>
                     <button id="btn-status-toggle" onclick="App.events.toggleStatusUI()" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-slate-200 text-slate-500 hover:bg-slate-300">В процессе</button>
                 </div>
-
                 <div id="recurrence-block" class="mb-4 hidden">
                     <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Повторение</label>
                     <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                         <button onclick="App.events.setRecurrence('none')" id="rec-btn-none" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 shadow-sm">Нет</button>
                         <button onclick="App.events.setRecurrence('daily')" id="rec-btn-daily" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400">Каждый день</button>
-                        <button onclick="App.events.setRecurrence('weekly')" id="rec-btn-weekly" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400">Каждую неделю</button>
+                        <button onclick="App.events.setRecurrence('weekly')" id="rec-btn-weekly" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400">Неделю</button>
                     </div>
                     <input type="hidden" id="event-recurrence" value="none">
                 </div>
-
                 <div class="pt-2" id="participants-block"><p class="text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Назначить на</p><div id="modal-users" class="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-2"></div></div>
                 <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 relative transition-all hover:border-rose-400">
                     <div id="file-upload-ui" class="text-center py-2">
                         <p class="text-[10px] uppercase font-black text-slate-400 mb-2">Прикрепить файл</p>
                         <button onclick="document.getElementById('event-file-input').click()" class="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors flex items-center justify-center gap-2 w-full"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg> Выбрать файл</button>
-                        <span class="text-[9px] text-slate-400 block mt-1 opacity-70">(Макс. 1.5 MB)</span>
                     </div>
                     <div id="file-display-ui" class="hidden flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
-                        <a id="file-download-link" href="#" download class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-rose-500 truncate max-w-[200px] transition-colors group">
-                            <div class="p-1.5 bg-rose-100 text-rose-500 rounded-md"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg></div>
-                            <span id="file-name-display" class="truncate">filename.pdf</span>
-                        </a>
-                        <button onclick="App.events.removeFile()" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors" title="Удалить файл">✕</button>
+                        <a id="file-download-link" href="#" download class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-rose-500 truncate max-w-[200px] transition-colors group"><div class="p-1.5 bg-rose-100 text-rose-500 rounded-md"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg></div><span id="file-name-display" class="truncate">filename.pdf</span></a><button onclick="App.events.removeFile()" class="text-slate-400 hover:text-red-500 p-1.5 transition-colors">✕</button>
                     </div>
                     <input type="file" id="event-file-input" class="hidden" onchange="App.events.handleFileUpload(this)">
                 </div>
-                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                 <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <label class="flex items-center gap-2 cursor-pointer group">
-                        <div class="relative flex items-center">
-                            <input type="checkbox" id="event-has-deadline" onchange="App.events.toggleDeadlineUI()" class="peer appearance-none w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded checked:bg-red-500 checked:border-red-500 transition-colors">
-                            <svg class="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none left-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                        </div>
+                        <div class="relative flex items-center"><input type="checkbox" id="event-has-deadline" onchange="App.events.toggleDeadlineUI()" class="peer appearance-none w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded checked:bg-red-500 checked:border-red-500 transition-colors"><svg class="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none left-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
                         <span class="text-xs font-black uppercase text-slate-400 group-hover:text-red-500 transition-colors">Установить дедлайн</span>
                     </label>
                     <div id="deadline-inputs" class="hidden mt-3 grid grid-cols-2 gap-4 bg-red-50 dark:bg-red-900/10 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
-                        <div><label class="text-[9px] font-black text-red-400 uppercase ml-2 mb-1 block">Дата дедлайна</label><input type="date" id="deadline-date" class="w-full px-3 py-2 bg-white dark:bg-slate-900 rounded-lg outline-none font-bold text-xs focus:ring-2 focus:ring-red-500 transition-all text-slate-600 dark:text-slate-300"></div>
+                        <div><label class="text-[9px] font-black text-red-400 uppercase ml-2 mb-1 block">Дата</label><input type="date" id="deadline-date" class="w-full px-3 py-2 bg-white dark:bg-slate-900 rounded-lg outline-none font-bold text-xs focus:ring-2 focus:ring-red-500 transition-all text-slate-600 dark:text-slate-300"></div>
                         <div><label class="text-[9px] font-black text-red-400 uppercase ml-2 mb-1 block">Время</label><input type="time" id="deadline-time" class="w-full px-3 py-2 bg-white dark:bg-slate-900 rounded-lg outline-none font-bold text-xs focus:ring-2 focus:ring-red-500 transition-all text-slate-600 dark:text-slate-300"></div>
                     </div>
                 </div>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="App.ui.closeModal('modal-event')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button>
-                <button onclick="App.events.save()" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 hover:shadow-rose-500/40 transition-all">Сохранить</button>
-            </div>
+            <div class="flex gap-3 mt-8"><button onclick="App.ui.closeModal('modal-event')" class="flex-1 py-3 text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">Отмена</button><button onclick="App.events.save()" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 hover:bg-rose-600 hover:shadow-rose-500/40 transition-all">Сохранить</button></div>
         </div>
     </div>
+    <div id="modal-view-profile" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4"><div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800 flex flex-col items-center"><div class="w-full flex justify-end mb-2"><button onclick="App.ui.closeModal('modal-view-profile')" class="text-slate-400 hover:text-slate-600">✕</button></div><img id="view-profile-avatar" src="" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4"><h3 id="view-profile-name" class="text-2xl font-black text-center mb-1"></h3><p id="view-profile-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" onclick="App.utils.copyId(this)" title="Нажмите, чтобы скопировать"></p></div></div>
+    <div id="modal-settings" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4"><div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800"><div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black">Настройки</h3> <button onclick="App.ui.closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600">✕</button></div><div class="mb-8"><p class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Оформление</p><div class="p-1 bg-slate-100 dark:bg-slate-800 rounded-xl flex"><button onclick="App.ui.setTheme('light')" id="theme-btn-light" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Светлая</button><button onclick="App.ui.setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Темная</button></div></div><div class="flex flex-col items-center mb-8"><div class="relative group cursor-pointer"><img id="settings-avatar" onclick="document.getElementById('profile-upload').click()" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4 transition-opacity group-hover:opacity-80"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-white font-bold text-xs">Изменить</div></div><input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="App.auth.uploadAvatar(this)"><input type="text" id="settings-name" class="text-center font-black text-xl bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-rose-500 outline-none w-full pb-1 transition-colors" placeholder="Ваше имя"><div class="flex items-center justify-center gap-2 mt-1"><p id="settings-user-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" title="Нажмите, чтобы скопировать" onclick="App.utils.copyId(this)">ID: ---</p></div></div><div class="space-y-3"><button onclick="App.auth.saveProfile()" class="w-full py-3.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase hover:shadow-lg transition-all">Сохранить</button><button onclick="App.auth.logout()" class="w-full py-3.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl text-xs font-bold transition-colors">Выйти из аккаунта</button></div></div></div>
 
-    <div id="modal-view-profile" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800 flex flex-col items-center">
-            <div class="w-full flex justify-end mb-2">
-                <button onclick="App.ui.closeModal('modal-view-profile')" class="text-slate-400 hover:text-slate-600">✕</button>
-            </div>
-            <img id="view-profile-avatar" src="" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4">
-            <h3 id="view-profile-name" class="text-2xl font-black text-center mb-1"></h3>
-            <p id="view-profile-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" onclick="App.utils.copyId(this)" title="Нажмите, чтобы скопировать"></p>
-        </div>
-    </div>
-
-    <div id="modal-settings" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4">
-       <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black">Настройки</h3> <button onclick="App.ui.closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600">✕</button>
-            </div>
-            <div class="mb-8">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Оформление</p>
-                <div class="p-1 bg-slate-100 dark:bg-slate-800 rounded-xl flex">
-                    <button onclick="App.ui.setTheme('light')" id="theme-btn-light" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Светлая</button>
-                    <button onclick="App.ui.setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Темная</button>
-                </div>
-            </div>
-            <div class="flex flex-col items-center mb-8">
-                <div class="relative group cursor-pointer">
-                    <img id="settings-avatar" onclick="document.getElementById('profile-upload').click()" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4 transition-opacity group-hover:opacity-80">
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-white font-bold text-xs">Изменить</div>
-                </div>
-                <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="App.auth.uploadAvatar(this)">
-                <input type="text" id="settings-name" class="text-center font-black text-xl bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-rose-500 outline-none w-full pb-1 transition-colors" placeholder="Ваше имя">
-
-                <div class="flex items-center justify-center gap-2 mt-1">
-                     <p id="settings-user-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" title="Нажмите, чтобы скопировать" onclick="App.utils.copyId(this)">ID: ---</p>
-                </div>
-            </div>
-            <div class="space-y-3">
-                <button onclick="App.auth.saveProfile()" class="w-full py-3.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase hover:shadow-lg transition-all">Сохранить</button>
-                <button onclick="App.auth.logout()" class="w-full py-3.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl text-xs font-bold transition-colors">Выйти из аккаунта</button>
-            </div>
-       </div>
-    </div>
-
-    <div id="team-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-40 py-1">
-        <button id="ctx-btn-delete-team" onclick="App.teams.delete()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            Удалить
-        </button>
-        <button id="ctx-btn-leave-team" onclick="App.teams.leave()" class="hidden w-full text-left px-4 py-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-xs font-bold transition-colors flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            Выйти
-        </button>
-    </div>
-
-    <div id="user-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-48 py-1">
-        <button onclick="App.teams.viewUserProfile()" class="w-full text-left px-4 py-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors flex items-center gap-2 border-b border-slate-50 dark:border-slate-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            Профиль
-        </button>
-        <button id="btn-remove-user" onclick="App.teams.removeMember()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>
-            Удалить из команды
-        </button>
-    </div>
+    <div id="team-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-40 py-1"><button id="ctx-btn-delete-team" onclick="App.teams.delete()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg> Удалить</button><button id="ctx-btn-leave-team" onclick="App.teams.leave()" class="hidden w-full text-left px-4 py-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Выйти</button></div>
+    <div id="user-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-48 py-1"><button onclick="App.teams.viewUserProfile()" class="w-full text-left px-4 py-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors flex items-center gap-2 border-b border-slate-50 dark:border-slate-700"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> Профиль</button><button id="btn-remove-user" onclick="App.teams.removeMember()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg> Удалить из команды</button></div>
 
    <script>
         const firebaseConfig = {
@@ -479,27 +340,11 @@
             const feat = document.getElementById('landing-features');
 
             if (feat.classList.contains('hidden')) {
-                // Show Features
-                main.style.opacity = '0';
-                main.style.transform = 'scale(0.9)';
-                setTimeout(() => main.classList.add('hidden'), 300);
-
-                feat.classList.remove('hidden');
-                setTimeout(() => {
-                    feat.style.opacity = '1';
-                    feat.style.transform = 'scale(1)';
-                }, 50);
+                main.style.opacity = '0'; main.style.transform = 'scale(0.9)'; setTimeout(() => main.classList.add('hidden'), 300);
+                feat.classList.remove('hidden'); setTimeout(() => { feat.style.opacity = '1'; feat.style.transform = 'scale(1)'; }, 50);
             } else {
-                // Show Main
-                feat.style.opacity = '0';
-                feat.style.transform = 'scale(0.95)';
-                setTimeout(() => feat.classList.add('hidden'), 300);
-
-                main.classList.remove('hidden');
-                setTimeout(() => {
-                    main.style.opacity = '1';
-                    main.style.transform = 'scale(1)';
-                }, 50);
+                feat.style.opacity = '0'; feat.style.transform = 'scale(0.95)'; setTimeout(() => feat.classList.add('hidden'), 300);
+                main.classList.remove('hidden'); setTimeout(() => { main.style.opacity = '1'; main.style.transform = 'scale(1)'; }, 50);
             }
         }
 
@@ -518,7 +363,6 @@
             db = firebase.database();
 
             const storedUser = localStorage.getItem('pin_v2_session');
-
             if (storedUser) {
                 Store.session.user = JSON.parse(storedUser);
                 Store.connectDB();
@@ -526,7 +370,6 @@
                 document.getElementById('loader').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('loader').style.display = 'none';
-                    // New logic: Show Landing instead of Auth
                     const landing = document.getElementById('landing-screen');
                     landing.classList.remove('hidden');
                     setTimeout(() => landing.style.opacity = '1', 50);
@@ -558,27 +401,19 @@
             areDatesEqual: (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear(),
 
             isEventVisible: (ev, targetDate) => {
-                const start = new Date(ev.dateStr);
-                start.setHours(0,0,0,0);
-                const target = new Date(targetDate);
-                target.setHours(0,0,0,0);
-
+                const start = new Date(ev.dateStr); start.setHours(0,0,0,0);
+                const target = new Date(targetDate); target.setHours(0,0,0,0);
                 if (target < start) return false;
-
                 if (ev.deadline) {
-                    const deadlineDate = new Date(ev.deadline.date);
-                    deadlineDate.setHours(0,0,0,0);
+                    const deadlineDate = new Date(ev.deadline.date); deadlineDate.setHours(0,0,0,0);
                     if (target > deadlineDate) return false;
                 }
-
                 if (!ev.recurrence || ev.recurrence === 'none') return start.getTime() === target.getTime();
-
                 if (ev.recurrence === 'daily') return true;
                 if (ev.recurrence === 'weekly') return start.getDay() === target.getDay();
                 if (ev.recurrence === 'monthly') return start.getDate() === target.getDate();
                 return false;
             },
-
             isEventCompleted: (ev, dateStr) => {
                 if (!ev.recurrence || ev.recurrence === 'none') return ev.completed;
                 return (ev.completedDates || []).includes(dateStr);
@@ -587,57 +422,33 @@
 
         const Store = {
             data: { users: [], teams: [], events: [], notifications: [] },
-            session: {
-                user: null,
-                activeTeamId: localStorage.getItem('pin_v2_active_team') || 'personal',
-                currentDate: new Date(),
-                view: 'month',
-                currentEventId: null,
-                tempAvatar: "",
-                tempFile: null,
-                contextDateStr: null
-            },
+            session: { user: null, activeTeamId: localStorage.getItem('pin_v2_active_team') || 'personal', currentDate: new Date(), view: 'month', currentEventId: null, tempAvatar: "", tempFile: null, contextDateStr: null },
             connectDB() {
                 db.ref('/').on('value', (snapshot) => {
                     const val = snapshot.val();
                     if (val) {
-                        this.data.users = val.users || [];
-                        this.data.teams = val.teams || [];
-                        this.data.events = val.events || [];
-                        this.data.notifications = val.notifications || [];
-
+                        this.data.users = val.users || []; this.data.teams = val.teams || []; this.data.events = val.events || []; this.data.notifications = val.notifications || [];
                         const currentUserIdx = this.data.users.findIndex(u => u.id === this.session.user.id);
                         if (currentUserIdx !== -1 && !this.data.users[currentUserIdx].uid) {
                             const newUid = Utils.generateUid();
-                            this.data.users[currentUserIdx].uid = newUid;
-                            this.session.user.uid = newUid;
-                            localStorage.setItem('pin_v2_session', JSON.stringify(this.session.user));
-                            this.save();
+                            this.data.users[currentUserIdx].uid = newUid; this.session.user.uid = newUid;
+                            localStorage.setItem('pin_v2_session', JSON.stringify(this.session.user)); this.save();
                         } else if (currentUserIdx !== -1) {
                             this.session.user.uid = this.data.users[currentUserIdx].uid;
                         }
-
                     } else { this.save(); }
-                    document.getElementById('loader').style.display = 'none';
-                    App.ui.closeModal('auth-screen');
-                    App.ui.refresh();
+                    document.getElementById('loader').style.display = 'none'; App.ui.closeModal('auth-screen'); App.ui.refresh();
                 });
                 setInterval(() => App.notifications.checkDeadlines(), 60000);
             },
             save() { db.ref('/').set(this.data); },
             getActiveTeam() { return this.session.activeTeamId === 'personal' ? null : this.data.teams.find(t => t.id == this.session.activeTeamId); },
-
             getFilteredEvents() {
                 return (this.data.events || []).filter(e => {
-                     const isCorrectContext = this.session.activeTeamId === 'personal'
-                        ? (e.context === 'personal' && e.creatorId === this.session.user.id)
-                        : (e.context === 'team' && e.teamId == this.session.activeTeamId);
-
+                     const isCorrectContext = this.session.activeTeamId === 'personal' ? (e.context === 'personal' && e.creatorId === this.session.user.id) : (e.context === 'team' && e.teamId == this.session.activeTeamId);
                      if (!isCorrectContext) return false;
                      if (this.session.activeTeamId === 'personal') return true;
-
-                     const team = this.getActiveTeam();
-                     const userId = this.session.user.id;
+                     const team = this.getActiveTeam(); const userId = this.session.user.id;
                      if (team && team.ownerId === userId) return true;
                      if (e.assignees && e.assignees.includes(userId)) return true;
                      return false;
@@ -650,491 +461,250 @@
                 copyId(el) {
                     const text = el.innerText.replace('ID: ', '');
                     navigator.clipboard.writeText(text).then(() => {
-                        const original = el.innerText;
-                        el.innerText = "Скопировано!";
-                        el.classList.add('text-green-500');
-                        setTimeout(() => {
-                            el.innerText = original;
-                            el.classList.remove('text-green-500');
-                        }, 1500);
+                        const original = el.innerText; el.innerText = "Скопировано!"; el.classList.add('text-green-500');
+                        setTimeout(() => { el.innerText = original; el.classList.remove('text-green-500'); }, 1500);
                     });
                 }
             },
             drag: {
                 draggedEvent: null,
                 handleDragStart(e, eventObj) {
-                    this.draggedEvent = eventObj;
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', JSON.stringify(eventObj));
-                    setTimeout(() => e.target.classList.add('dragging'), 0);
+                    this.draggedEvent = eventObj; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', JSON.stringify(eventObj)); setTimeout(() => e.target.classList.add('dragging'), 0);
                 },
-                handleDragEnd(e) {
-                    e.target.classList.remove('dragging');
-                    this.draggedEvent = null;
-                    document.querySelectorAll('.drop-zone-active').forEach(el => el.classList.remove('drop-zone-active'));
-                },
-                handleDragOver(e) {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    e.currentTarget.classList.add('drop-zone-active');
-                },
-                handleDragLeave(e) {
-                    e.currentTarget.classList.remove('drop-zone-active');
-                },
+                handleDragEnd(e) { e.target.classList.remove('dragging'); this.draggedEvent = null; document.querySelectorAll('.drop-zone-active').forEach(el => el.classList.remove('drop-zone-active')); },
+                handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; e.currentTarget.classList.add('drop-zone-active'); },
+                handleDragLeave(e) { e.currentTarget.classList.remove('drop-zone-active'); },
                 handleDrop(e, newDate, newTime) {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove('drop-zone-active');
+                    e.preventDefault(); e.currentTarget.classList.remove('drop-zone-active');
                     if (!this.draggedEvent) return;
-
-                    const ev = this.draggedEvent;
-                    ev.dateStr = Utils.formatDateForInput(newDate);
-                    if(newTime) ev.time = newTime;
-
+                    const ev = this.draggedEvent; ev.dateStr = Utils.formatDateForInput(newDate); if(newTime) ev.time = newTime;
                     const idx = Store.data.events.findIndex(x => x.id === ev.id);
-                    if(idx !== -1) {
-                        Store.data.events[idx] = ev;
-                        Store.save();
-                        App.ui.showToast('Задача перемещена', 'success');
-                    }
+                    if(idx !== -1) { Store.data.events[idx] = ev; Store.save(); App.ui.showToast('Задача перемещена', 'success'); }
                 }
             },
-
             ui: {
+                toggleSidebar() {
+                    const sb = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebar-overlay');
+                    const isClosed = sb.classList.contains('-translate-x-full');
+                    if(isClosed) {
+                        sb.classList.remove('-translate-x-full');
+                        overlay.classList.remove('hidden');
+                        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                    } else {
+                        sb.classList.add('-translate-x-full');
+                        overlay.classList.add('opacity-0');
+                        setTimeout(() => overlay.classList.add('hidden'), 300);
+                    }
+                },
                 toggleViewDropdown() {
-                    const drop = document.getElementById('view-dropdown');
-                    const chev = document.getElementById('view-chevron');
+                    const drop = document.getElementById('view-dropdown'); const chev = document.getElementById('view-chevron');
                     const isActive = drop.classList.contains('active');
-                    if (isActive) { drop.classList.remove('active'); chev.style.transform = 'rotate(0deg)'; }
-                    else { drop.classList.add('active'); chev.style.transform = 'rotate(180deg)'; }
+                    if (isActive) { drop.classList.remove('active'); chev.style.transform = 'rotate(0deg)'; } else { drop.classList.add('active'); chev.style.transform = 'rotate(180deg)'; }
                 },
                 closeViewDropdown() {
-                    const drop = document.getElementById('view-dropdown');
-                    const chev = document.getElementById('view-chevron');
+                    const drop = document.getElementById('view-dropdown'); const chev = document.getElementById('view-chevron');
                     if(drop) { drop.classList.remove('active'); chev.style.transform = 'rotate(0deg)'; }
                 },
                 setTheme(mode) {
-                    if (mode === 'dark') { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); }
-                    else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); }
-                    this.updateThemeBtns();
+                    if (mode === 'dark') { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } else { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } this.updateThemeBtns();
                 },
                 updateThemeBtns() {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    const btnLight = document.getElementById('theme-btn-light');
-                    const btnDark = document.getElementById('theme-btn-dark');
+                    const isDark = document.documentElement.classList.contains('dark'); const btnLight = document.getElementById('theme-btn-light'); const btnDark = document.getElementById('theme-btn-dark');
                     if (!btnLight) return;
-                    const active = "bg-white dark:bg-slate-700 text-rose-500 shadow-sm";
-                    const inactive = "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200";
+                    const active = "bg-white dark:bg-slate-700 text-rose-500 shadow-sm"; const inactive = "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200";
                     btnLight.className = `flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all ${!isDark ? active : inactive}`;
                     btnDark.className = `flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all ${isDark ? active : inactive}`;
                 },
                 showToast(msg, type = 'info') {
-                    const container = document.getElementById('toast-container');
-                    const toast = document.createElement('div');
+                    const container = document.getElementById('toast-container'); const toast = document.createElement('div');
                     let bgClass = type === 'alert' ? 'bg-red-500' : (type === 'success' ? 'bg-green-500' : 'bg-slate-800');
                     if(document.documentElement.classList.contains('dark') && type === 'info') bgClass = 'bg-white text-slate-900';
                     toast.className = `toast p-4 rounded-xl text-white shadow-xl flex items-center gap-3 min-w-[300px] text-sm font-bold ${bgClass}`;
-                    toast.innerHTML = `<span>${msg}</span>`;
-                    container.appendChild(toast);
+                    toast.innerHTML = `<span>${msg}</span>`; container.appendChild(toast);
                     requestAnimationFrame(() => toast.classList.add('show'));
                     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
                 },
                 openModal(id) {
-                    const modal = document.getElementById(id);
-                    modal.style.display = 'flex';
-                    requestAnimationFrame(() => modal.classList.add('active'));
+                    const modal = document.getElementById(id); modal.style.display = 'flex'; requestAnimationFrame(() => modal.classList.add('active'));
                     if(id === 'modal-create-team') document.getElementById('team-dropdown').classList.add('hidden');
                     if(id === 'modal-settings' && Store.session.user) {
-                        document.getElementById('settings-name').value = Store.session.user.name;
-                        document.getElementById('settings-avatar').src = Store.session.user.avatar;
-                        const uid = Store.session.user.uid || "---";
-                        document.getElementById('settings-user-uid').innerText = `ID: ${uid}`;
+                        document.getElementById('settings-name').value = Store.session.user.name; document.getElementById('settings-avatar').src = Store.session.user.avatar;
+                        const uid = Store.session.user.uid || "---"; document.getElementById('settings-user-uid').innerText = `ID: ${uid}`;
                     }
                 },
-                closeModal(id) {
-                    const modal = document.getElementById(id);
-                    modal.classList.remove('active');
-                    setTimeout(() => modal.style.display = 'none', 300);
-                },
+                closeModal(id) { const modal = document.getElementById(id); modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 300); },
                 toggleNotifications() {
-                    const dropdown = document.getElementById('notif-dropdown');
-                    dropdown.classList.toggle('hidden');
+                    const dropdown = document.getElementById('notif-dropdown'); dropdown.classList.toggle('hidden');
                     if (!dropdown.classList.contains('hidden')) {
                         const myNotifs = Store.data.notifications.filter(n => n.to === Store.session.user.id);
                         const list = document.getElementById('notif-list');
                         if (myNotifs.length === 0) list.innerHTML = '<div class="text-center text-xs text-slate-400 p-6 italic">Нет новых уведомлений</div>';
                         else {
-                            list.innerHTML = myNotifs.map(n => `
-                                <div class="p-3 rounded-xl ${n.read ? 'opacity-50' : 'bg-slate-50 dark:bg-slate-800 border-l-2 border-rose-500'} mb-1 text-xs transition-all">
-                                    <div class="font-bold ${n.type === 'alert' ? 'text-red-500' : 'dark:text-white'}">${Utils.escapeHtml(n.msg)}</div>
-                                    <div class="text-[9px] text-slate-400 text-right mt-1">${n.date}</div>
-                                </div>`).join('');
-                            let changed = false;
-                            Store.data.notifications.forEach(n => { if(n.to === Store.session.user.id && !n.read) { n.read = true; changed = true; } });
+                            list.innerHTML = myNotifs.map(n => `<div class="p-3 rounded-xl ${n.read ? 'opacity-50' : 'bg-slate-50 dark:bg-slate-800 border-l-2 border-rose-500'} mb-1 text-xs transition-all"><div class="font-bold ${n.type === 'alert' ? 'text-red-500' : 'dark:text-white'}">${Utils.escapeHtml(n.msg)}</div><div class="text-[9px] text-slate-400 text-right mt-1">${n.date}</div></div>`).join('');
+                            let changed = false; Store.data.notifications.forEach(n => { if(n.to === Store.session.user.id && !n.read) { n.read = true; changed = true; } });
                             if(changed) { Store.save(); App.notifications.updateBadge(); }
                         }
                     }
                 },
                 renderLeaderboard() {
-    const team = Store.getActiveTeam();
-    const section = document.getElementById('leaderboard-section');
-
-    if (!team) {
-        section.classList.add('hidden');
-        section.classList.remove('flex');
-        return;
-    }
-
-    section.classList.remove('hidden');
-    section.classList.add('flex');
-
-    const members = (Store.data.users || []).filter(u => team.members.includes(u.id));
-
-    // ИЗМЕНЕНИЕ: Получаем рейтинг из текущей команды, а не из пользователя
-    const teamRatings = team.ratings || {};
-
-    // Сортируем по рейтингу внутри ЭТОЙ команды
-    members.sort((a, b) => (teamRatings[b.id] || 0) - (teamRatings[a.id] || 0));
-
-    const list = document.getElementById('leaderboard-list');
-    list.innerHTML = members.map((u, index) => {
-        let medal = '';
-        if (index === 0) medal = '🥇';
-        else if (index === 1) medal = '🥈';
-        else if (index === 2) medal = '🥉';
-        else medal = `<span class="text-slate-400 text-[9px] font-bold w-4 text-center">${index + 1}</span>`;
-
-        // ИЗМЕНЕНИЕ: Отображаем очки конкретной команды
-        const score = teamRatings[u.id] || 0;
-
-        return `
-            <div class="flex items-center justify-between p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors">
-                <div class="flex items-center gap-2 overflow-hidden">
-                    <div class="shrink-0 w-4 flex justify-center">${medal}</div>
-                    <img src="${u.avatar}" class="w-5 h-5 rounded-full object-cover">
-                    <span class="text-[10px] font-bold truncate max-w-[80px]">${Utils.escapeHtml(u.name)}</span>
-                </div>
-                <span class="text-[10px] font-black text-rose-500">${score}</span>
-            </div>
-        `;
-    }).join('');
-},
+                    const team = Store.getActiveTeam(); const section = document.getElementById('leaderboard-section');
+                    if (!team) { section.classList.add('hidden'); section.classList.remove('flex'); return; }
+                    section.classList.remove('hidden'); section.classList.add('flex');
+                    const members = (Store.data.users || []).filter(u => team.members.includes(u.id));
+                    const teamRatings = team.ratings || {};
+                    members.sort((a, b) => (teamRatings[b.id] || 0) - (teamRatings[a.id] || 0));
+                    const list = document.getElementById('leaderboard-list');
+                    list.innerHTML = members.map((u, index) => {
+                        let medal = ''; if (index === 0) medal = '🥇'; else if (index === 1) medal = '🥈'; else if (index === 2) medal = '🥉'; else medal = `<span class="text-slate-400 text-[9px] font-bold w-4 text-center">${index + 1}</span>`;
+                        const score = teamRatings[u.id] || 0;
+                        return `<div class="flex items-center justify-between p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors"><div class="flex items-center gap-2 overflow-hidden"><div class="shrink-0 w-4 flex justify-center">${medal}</div><img src="${u.avatar}" class="w-5 h-5 rounded-full object-cover"><span class="text-[10px] font-bold truncate max-w-[80px]">${Utils.escapeHtml(u.name)}</span></div><span class="text-[10px] font-black text-rose-500">${score}</span></div>`;
+                    }).join('');
+                },
                 refresh() {
-                    const team = Store.getActiveTeam();
-                    const user = Store.session.user;
-                    if(!user) return;
+                    const team = Store.getActiveTeam(); const user = Store.session.user; if(!user) return;
                     document.getElementById('current-team-name').innerText = team ? team.name : "Личный календарь";
-                    document.getElementById('display-user-name').innerText = user.name;
-                    document.getElementById('display-user-avatar').src = user.avatar;
+                    document.getElementById('display-user-name').innerText = user.name; document.getElementById('display-user-avatar').src = user.avatar;
                     const isOwner = team && team.ownerId === user.id;
                     document.getElementById('display-role').innerText = team ? (isOwner ? "Admin" : "Member") : "Personal";
-                    const btnAdd = document.getElementById('btn-add-teammate');
-                    if (team && isOwner) btnAdd.classList.remove('hidden'); else btnAdd.classList.add('hidden');
-
+                    const btnAdd = document.getElementById('btn-add-teammate'); if (team && isOwner) btnAdd.classList.remove('hidden'); else btnAdd.classList.add('hidden');
                     const myTeams = (Store.data.teams || []).filter(t => t.members && t.members.includes(user.id));
-                    const listContainer = document.getElementById('team-list-container');
-                    listContainer.innerHTML = '';
-
+                    const listContainer = document.getElementById('team-list-container'); listContainer.innerHTML = '';
                     const createBtnEl = (id, name, isPersonal) => {
-                        const btn = document.createElement('button');
-                        const isActive = Store.session.activeTeamId == id;
+                        const btn = document.createElement('button'); const isActive = Store.session.activeTeamId == id;
                         btn.className = `w-full text-left p-2 rounded-lg text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 ${isActive ? 'text-rose-500 bg-slate-50 dark:bg-slate-800' : 'text-slate-600 dark:text-slate-300'} transition-colors`;
-                        btn.innerText = Utils.escapeHtml(name);
-                        btn.onclick = () => App.teams.switch(id);
-                        if(!isPersonal) {
-                            btn.oncontextmenu = (e) => App.teams.showContextMenu(e, id);
-                        }
+                        btn.innerText = Utils.escapeHtml(name); btn.onclick = () => App.teams.switch(id);
+                        if(!isPersonal) btn.oncontextmenu = (e) => App.teams.showContextMenu(e, id);
                         return btn;
                     };
-
                     listContainer.appendChild(createBtnEl('personal', 'Личный календарь', true));
                     myTeams.forEach(t => listContainer.appendChild(createBtnEl(t.id, t.name, false)));
-
                     const members = team ? (Store.data.users || []).filter(u => team.members.includes(u.id)) : [user];
-                    const userListContainer = document.getElementById('user-list');
-                    userListContainer.innerHTML = '';
-
+                    const userListContainer = document.getElementById('user-list'); userListContainer.innerHTML = '';
                     members.forEach(u => {
                         const div = document.createElement('div');
                         div.className = "flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-default";
-                        div.innerHTML = `
-                            <img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm">
-                            <span class="text-xs font-bold truncate text-slate-700 dark:text-slate-300">${Utils.escapeHtml(u.name)} ${u.id === user.id ? '<span class="text-slate-400 font-normal">(Вы)</span>' : ''}</span>
-                            ${team && team.ownerId === u.id ? '<span class="ml-auto text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">BOSS</span>' : ''}
-                        `;
-                        if (team && u.id !== user.id) {
-                            div.oncontextmenu = (e) => App.teams.showUserContextMenu(e, u.id);
-                        }
+                        div.innerHTML = `<img src="${u.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm"><span class="text-xs font-bold truncate text-slate-700 dark:text-slate-300">${Utils.escapeHtml(u.name)} ${u.id === user.id ? '<span class="text-slate-400 font-normal">(Вы)</span>' : ''}</span>${team && team.ownerId === u.id ? '<span class="ml-auto text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black">BOSS</span>' : ''}`;
+                        if (team && u.id !== user.id) div.oncontextmenu = (e) => App.teams.showUserContextMenu(e, u.id);
                         userListContainer.appendChild(div);
                     });
-
-                    this.renderLeaderboard();
-
-                    App.notifications.updateBadge();
-                    App.calendar.render();
+                    this.renderLeaderboard(); App.notifications.updateBadge(); App.calendar.render();
                 }
             },
             auth: {
                 isLoginMode: true,
-                toggleMode() {
-                    this.isLoginMode = !this.isLoginMode;
-                    document.getElementById('auth-title').innerText = this.isLoginMode ? 'Pin Me Up' : 'Регистрация';
-                    document.getElementById('auth-btn-main').innerText = this.isLoginMode ? 'Войти' : 'Создать аккаунт';
-                    document.getElementById('auth-switch-btn').innerText = this.isLoginMode ? 'Нет аккаунта?' : 'Есть аккаунт?';
-                },
+                toggleMode() { this.isLoginMode = !this.isLoginMode; document.getElementById('auth-title').innerText = this.isLoginMode ? 'Pin Me Up' : 'Регистрация'; document.getElementById('auth-btn-main').innerText = this.isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('auth-switch-btn').innerText = this.isLoginMode ? 'Нет аккаунта?' : 'Есть аккаунт?'; },
                 handle() {
-                    const login = document.getElementById('auth-login').value.trim();
-                    const pass = document.getElementById('auth-pass').value.trim();
+                    const login = document.getElementById('auth-login').value.trim(); const pass = document.getElementById('auth-pass').value.trim();
                     if(!login || !pass) return App.ui.showToast("Заполните все поля", "alert");
-                    const loader = document.getElementById('loader');
-                    loader.style.display = 'flex';
-                    loader.style.opacity = '1';
+                    const loader = document.getElementById('loader'); loader.style.display = 'flex'; loader.style.opacity = '1';
                     db.ref('users').once('value').then((snapshot) => {
-                        const val = snapshot.val();
-                        const users = val ? Object.values(val) : [];
-                        loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 300);
+                        const val = snapshot.val(); const users = val ? Object.values(val) : [];
+                        loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300);
                         if (this.isLoginMode) {
                             const user = users.find(u => u.name.toLowerCase() === login.toLowerCase() && u.password === pass);
-                            if (user) this.success(user);
-                            else App.ui.showToast("Неверный логин или пароль", "alert");
+                            if (user) this.success(user); else App.ui.showToast("Неверный логин или пароль", "alert");
                         } else {
                             if (users.some(u => u.name.toLowerCase() === login.toLowerCase())) return App.ui.showToast("Логин занят", "alert");
-                            const newUser = {
-                                id: Utils.generateId(),
-                                name: login,
-                                password: pass,
-                                avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=" + login,
-                                uid: Utils.generateUid()
-                            };
-                            users.push(newUser);
-                            db.ref('users').set(users);
-                            this.success(newUser);
+                            const newUser = { id: Utils.generateId(), name: login, password: pass, avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=" + login, uid: Utils.generateUid() };
+                            users.push(newUser); db.ref('users').set(users); this.success(newUser);
                         }
                     }).catch(error => { loader.style.display = 'none'; App.ui.showToast("Ошибка сети", "alert"); });
                 },
-                success(user) {
-                    Store.session.user = user;
-                    localStorage.setItem('pin_v2_session', JSON.stringify(user));
-                    Store.connectDB();
-                },
+                success(user) { Store.session.user = user; localStorage.setItem('pin_v2_session', JSON.stringify(user)); Store.connectDB(); },
                 logout() { localStorage.removeItem('pin_v2_session'); localStorage.removeItem('pin_v2_active_team'); location.reload(); },
                 uploadAvatar(input) {
-                    const file = input.files[0];
-                    if(!file) return;
-                    if(file.size > 2000000) return App.ui.showToast("Файл > 2MB", "alert");
-                    const r = new FileReader();
-                    r.onload = e => { document.getElementById('settings-avatar').src = e.target.result; Store.session.tempAvatar = e.target.result; };
-                    r.readAsDataURL(file);
+                    const file = input.files[0]; if(!file) return; if(file.size > 2000000) return App.ui.showToast("Файл > 2MB", "alert");
+                    const r = new FileReader(); r.onload = e => { document.getElementById('settings-avatar').src = e.target.result; Store.session.tempAvatar = e.target.result; }; r.readAsDataURL(file);
                 },
                 saveProfile() {
-                    const name = document.getElementById('settings-name').value.trim();
-                    if(name) Store.session.user.name = name;
+                    const name = document.getElementById('settings-name').value.trim(); if(name) Store.session.user.name = name;
                     if(Store.session.tempAvatar) Store.session.user.avatar = Store.session.tempAvatar;
-                    const idx = Store.data.users.findIndex(u => u.id === Store.session.user.id);
-                    if(idx !== -1) Store.data.users[idx] = Store.session.user;
-                    Store.save();
-                    localStorage.setItem('pin_v2_session', JSON.stringify(Store.session.user));
-                    App.ui.closeModal('modal-settings');
-                    App.ui.showToast("Профиль обновлен", "success");
+                    const idx = Store.data.users.findIndex(u => u.id === Store.session.user.id); if(idx !== -1) Store.data.users[idx] = Store.session.user;
+                    Store.save(); localStorage.setItem('pin_v2_session', JSON.stringify(Store.session.user)); App.ui.closeModal('modal-settings'); App.ui.showToast("Профиль обновлен", "success");
                 }
             },
-calendar: {
+            calendar: {
                 MONTHS: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
-
                 switchView(viewName) {
-                    Store.session.view = viewName;
-                    const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
-                    const labelEl = document.getElementById('current-view-label');
-                    if(labelEl) labelEl.innerText = labels[viewName];
-                    App.ui.closeViewDropdown();
-                    this.render();
+                    Store.session.view = viewName; const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
+                    const labelEl = document.getElementById('current-view-label'); if(labelEl) labelEl.innerText = labels[viewName]; App.ui.closeViewDropdown(); this.render();
                 },
-
                 navigate(step) {
-                    const d = Store.session.currentDate;
-                    const view = Store.session.view;
-                    if (view === 'day') d.setDate(d.getDate() + step);
-                    else if (view === 'week') d.setDate(d.getDate() + (step * 7));
-                    else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step);
-                    else if (view === 'year') d.setFullYear(d.getFullYear() + step);
-                    Store.session.currentDate = new Date(d);
-                    this.render();
+                    const d = Store.session.currentDate; const view = Store.session.view;
+                    if (view === 'day') d.setDate(d.getDate() + step); else if (view === 'week') d.setDate(d.getDate() + (step * 7)); else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step); else if (view === 'year') d.setFullYear(d.getFullYear() + step);
+                    Store.session.currentDate = new Date(d); this.render();
                 },
-
                 createEventCard(ev, dateContext) {
-                    const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext));
-                    const isOverdue = ev.overdue;
+                    const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext)); const isOverdue = ev.overdue;
                     let baseClass = "p-1.5 text-left relative z-10 task-card shadow-sm text-[10px] rounded mb-1 truncate ";
-                    if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 ";
-                    else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 ";
-                    else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 ";
-                    else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
-
-                    const div = document.createElement('div');
-                    div.className = baseClass;
-                    div.setAttribute('draggable', 'true');
-                    div.ondragstart = (e) => App.drag.handleDragStart(e, ev);
-                    div.ondragend = (e) => App.drag.handleDragEnd(e);
-                    let icon = "";
-                    if(ev.pendingReview && !isDone) icon = "⏳ ";
+                    if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 "; else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 "; else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 "; else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
+                    const div = document.createElement('div'); div.className = baseClass; div.setAttribute('draggable', 'true'); div.ondragstart = (e) => App.drag.handleDragStart(e, ev); div.ondragend = (e) => App.drag.handleDragEnd(e);
+                    let icon = ""; if(ev.pendingReview && !isDone) icon = "⏳ ";
                     let content = `<span class="font-black mr-1">${ev.time}</span> ${icon}${Utils.escapeHtml(ev.title)}`;
-                    if (ev.deadline && !isDone && !ev.pendingReview) {
-                        content += ` <span class="ml-1 text-[9px] font-bold text-red-500" title="Дедлайн: ${ev.deadline.date} ${ev.deadline.time}">🔥</span>`;
-                    }
-                    div.innerHTML = content;
-                    div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
+                    if (ev.deadline && !isDone && !ev.pendingReview) content += ` <span class="ml-1 text-[9px] font-bold text-red-500" title="Дедлайн: ${ev.deadline.date} ${ev.deadline.time}">🔥</span>`;
+                    div.innerHTML = content; div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
                     return div;
                 },
-
                 render() {
-                    const view = Store.session.view;
-                    const grid = document.getElementById('calendar-grid');
-                    grid.innerHTML = '';
-                    grid.className = 'animate-grid-entry';
-                    if (view === 'month') this.renderMonth(grid);
-                    else if (view === 'week') this.renderWeek(grid);
-                    else if (view === 'day') this.renderDay(grid);
-                    else if (view === 'year') this.renderYear(grid);
-                    else if (view === 'gantt') this.renderGantt(grid);
+                    const view = Store.session.view; const grid = document.getElementById('calendar-grid'); grid.innerHTML = ''; grid.className = 'animate-grid-entry';
+                    if (view === 'month') this.renderMonth(grid); else if (view === 'week') this.renderWeek(grid); else if (view === 'day') this.renderDay(grid); else if (view === 'year') this.renderYear(grid); else if (view === 'gantt') this.renderGantt(grid);
                 },
-
-                renderGantt(grid) {
+                renderGantt(grid) { /* GANTT CODE OMITTED (Unchanged Logic, just container adaptation handled by CSS) */
                     const d = Store.session.currentDate;
                     document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()} (Гант)`;
-
                     grid.className = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden h-full max-h-[calc(100vh-200px)]";
-
-                    const year = d.getFullYear();
-                    const month = d.getMonth();
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const dayWidth = 40;
-
-                    const header = document.createElement('div');
-                    header.className = "flex border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden";
-
-                    const titleSpacer = document.createElement('div');
-                    titleSpacer.className = "w-64 shrink-0 p-4 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 font-bold text-xs uppercase text-slate-400";
-                    titleSpacer.innerText = "Задача";
-                    header.appendChild(titleSpacer);
-
-                    const daysContainer = document.createElement('div');
-                    daysContainer.className = "flex overflow-hidden relative";
-
+                    // ... (rest of gantt logic is fine, just ensure overflow works)
+                    const year = d.getFullYear(); const month = d.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const dayWidth = 40;
+                    const header = document.createElement('div'); header.className = "flex border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden";
+                    const titleSpacer = document.createElement('div'); titleSpacer.className = "w-64 shrink-0 p-4 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 font-bold text-xs uppercase text-slate-400"; titleSpacer.innerText = "Задача"; header.appendChild(titleSpacer);
+                    const daysContainer = document.createElement('div'); daysContainer.className = "flex overflow-hidden relative";
                     for (let i = 1; i <= daysInMonth; i++) {
-                        const dayCol = document.createElement('div');
-                        const isToday = Utils.areDatesEqual(new Date(year, month, i), new Date());
-                        dayCol.style.width = `${dayWidth}px`;
-                        dayCol.className = `shrink-0 text-center py-3 border-r border-slate-100 dark:border-slate-800 text-[10px] font-bold ${isToday ? 'bg-rose-50 text-rose-500' : 'text-slate-400'}`;
-                        dayCol.innerText = i;
-                        daysContainer.appendChild(dayCol);
+                        const dayCol = document.createElement('div'); const isToday = Utils.areDatesEqual(new Date(year, month, i), new Date());
+                        dayCol.style.width = `${dayWidth}px`; dayCol.className = `shrink-0 text-center py-3 border-r border-slate-100 dark:border-slate-800 text-[10px] font-bold ${isToday ? 'bg-rose-50 text-rose-500' : 'text-slate-400'}`;
+                        dayCol.innerText = i; daysContainer.appendChild(dayCol);
                     }
-                    header.appendChild(daysContainer);
-                    grid.appendChild(header);
-
-                    const body = document.createElement('div');
-                    body.className = "flex flex-1 overflow-y-auto custom-scrollbar relative";
-
-                    const taskList = document.createElement('div');
-                    taskList.className = "w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10";
-
-                    const timeline = document.createElement('div');
-                    timeline.className = "flex relative overflow-x-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-800/20";
-                    timeline.style.width = `${daysInMonth * dayWidth}px`;
-
-                    const bgGrid = document.createElement('div');
-                    bgGrid.className = "absolute inset-0 flex pointer-events-none";
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const line = document.createElement('div');
-                        line.style.width = `${dayWidth}px`;
-                        line.className = "shrink-0 border-r border-slate-100 dark:border-slate-800/50 h-full";
-                        bgGrid.appendChild(line);
-                    }
+                    header.appendChild(daysContainer); grid.appendChild(header);
+                    const body = document.createElement('div'); body.className = "flex flex-1 overflow-y-auto custom-scrollbar relative";
+                    const taskList = document.createElement('div'); taskList.className = "w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10";
+                    const timeline = document.createElement('div'); timeline.className = "flex relative overflow-x-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-800/20"; timeline.style.width = `${daysInMonth * dayWidth}px`;
+                    const bgGrid = document.createElement('div'); bgGrid.className = "absolute inset-0 flex pointer-events-none";
+                    for (let i = 1; i <= daysInMonth; i++) { const line = document.createElement('div'); line.style.width = `${dayWidth}px`; line.className = "shrink-0 border-r border-slate-100 dark:border-slate-800/50 h-full"; bgGrid.appendChild(line); }
                     timeline.appendChild(bgGrid);
-
-                    const allEvents = Store.getFilteredEvents();
-                    const eventsInMonth = allEvents.filter(ev => {
-                        const start = new Date(ev.dateStr);
-                        let end = start;
-                        if (ev.deadline) end = new Date(ev.deadline.date);
-                        const monthStart = new Date(year, month, 1);
-                        const monthEnd = new Date(year, month, daysInMonth);
-                        return start <= monthEnd && end >= monthStart;
-                    });
-
+                    const allEvents = Store.getFilteredEvents(); const eventsInMonth = allEvents.filter(ev => { const start = new Date(ev.dateStr); let end = start; if (ev.deadline) end = new Date(ev.deadline.date); const monthStart = new Date(year, month, 1); const monthEnd = new Date(year, month, daysInMonth); return start <= monthEnd && end >= monthStart; });
                     eventsInMonth.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
-
                     eventsInMonth.forEach(ev => {
-                        const rowTitle = document.createElement('div');
-                        rowTitle.className = "h-10 px-4 flex items-center border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 truncate hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors";
-                        rowTitle.innerHTML = `<span class="truncate">${Utils.escapeHtml(ev.title)}</span>`;
-                        rowTitle.onclick = () => App.events.openModal(new Date(ev.dateStr), ev);
-                        taskList.appendChild(rowTitle);
-
-                        const rowTrack = document.createElement('div');
-                        rowTrack.className = "h-10 relative w-full border-b border-transparent group";
-
-                        const startObj = new Date(ev.dateStr);
-                        let endObj = ev.deadline ? new Date(ev.deadline.date) : new Date(ev.dateStr);
-
-                        if (endObj < startObj) endObj = startObj;
-
-                        let renderStart = startObj.getDate();
-                        let renderEnd = endObj.getDate();
-                        let isStartCut = false;
-                        let isEndCut = false;
-
-                        if (startObj.getMonth() < month || startObj.getFullYear() < year) { renderStart = 1; isStartCut = true; }
-                        else if (startObj.getMonth() > month || startObj.getFullYear() > year) { return; }
-
+                        const rowTitle = document.createElement('div'); rowTitle.className = "h-10 px-4 flex items-center border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 truncate hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors";
+                        rowTitle.innerHTML = `<span class="truncate">${Utils.escapeHtml(ev.title)}</span>`; rowTitle.onclick = () => App.events.openModal(new Date(ev.dateStr), ev); taskList.appendChild(rowTitle);
+                        const rowTrack = document.createElement('div'); rowTrack.className = "h-10 relative w-full border-b border-transparent group";
+                        const startObj = new Date(ev.dateStr); let endObj = ev.deadline ? new Date(ev.deadline.date) : new Date(ev.dateStr); if (endObj < startObj) endObj = startObj;
+                        let renderStart = startObj.getDate(); let renderEnd = endObj.getDate(); let isStartCut = false; let isEndCut = false;
+                        if (startObj.getMonth() < month || startObj.getFullYear() < year) { renderStart = 1; isStartCut = true; } else if (startObj.getMonth() > month || startObj.getFullYear() > year) { return; }
                         if (endObj.getMonth() > month || endObj.getFullYear() > year) { renderEnd = daysInMonth; isEndCut = true; }
-
-                        const durationDays = renderEnd - renderStart + 1;
-                        const leftPos = (renderStart - 1) * dayWidth;
-                        const widthPx = durationDays * dayWidth - 4;
-
-                        let barColor = "bg-rose-500";
-                        if (ev.completed) barColor = "bg-green-500 opacity-60";
-                        else if (ev.overdue) barColor = "bg-red-500";
-                        else if (ev.pendingReview) barColor = "bg-amber-400";
-                        else if (Store.session.activeTeamId === 'personal') barColor = "bg-indigo-500";
-
-                        const bar = document.createElement('div');
-                        bar.className = `absolute top-2 h-6 rounded-md shadow-sm text-[10px] text-white flex items-center px-2 cursor-pointer hover:brightness-110 transition-all ${barColor}`;
-                        bar.style.left = `${leftPos + 2}px`;
-                        bar.style.width = `${widthPx}px`;
-
-                        if (durationDays > 1) {
-                            bar.innerHTML = `<span class="truncate w-full font-bold">${isStartCut ? '← ' : ''}${Utils.escapeHtml(ev.title)}${isEndCut ? ' →' : ''}</span>`;
-                        }
-
-                        bar.onclick = () => App.events.openModal(new Date(ev.dateStr), ev);
-                        bar.title = `${ev.title} (${ev.dateStr} - ${ev.deadline ? ev.deadline.date : ev.dateStr})`;
-
-                        rowTrack.appendChild(bar);
-                        timeline.appendChild(rowTrack);
+                        const durationDays = renderEnd - renderStart + 1; const leftPos = (renderStart - 1) * dayWidth; const widthPx = durationDays * dayWidth - 4;
+                        let barColor = "bg-rose-500"; if (ev.completed) barColor = "bg-green-500 opacity-60"; else if (ev.overdue) barColor = "bg-red-500"; else if (ev.pendingReview) barColor = "bg-amber-400"; else if (Store.session.activeTeamId === 'personal') barColor = "bg-indigo-500";
+                        const bar = document.createElement('div'); bar.className = `absolute top-2 h-6 rounded-md shadow-sm text-[10px] text-white flex items-center px-2 cursor-pointer hover:brightness-110 transition-all ${barColor}`;
+                        bar.style.left = `${leftPos + 2}px`; bar.style.width = `${widthPx}px`;
+                        if (durationDays > 1) { bar.innerHTML = `<span class="truncate w-full font-bold">${isStartCut ? '← ' : ''}${Utils.escapeHtml(ev.title)}${isEndCut ? ' →' : ''}</span>`; }
+                        bar.onclick = () => App.events.openModal(new Date(ev.dateStr), ev); bar.title = `${ev.title} (${ev.dateStr} - ${ev.deadline ? ev.deadline.date : ev.dateStr})`;
+                        rowTrack.appendChild(bar); timeline.appendChild(rowTrack);
                     });
-
-                    const scrollSync = document.createElement('div');
-                    scrollSync.className = "flex-1 overflow-x-auto custom-scrollbar";
-                    scrollSync.onscroll = (e) => {
-                        daysContainer.style.transform = `translateX(-${e.target.scrollLeft}px)`;
-                    };
-                    scrollSync.appendChild(timeline);
-
-                    body.appendChild(taskList);
-                    body.appendChild(scrollSync);
-                    grid.appendChild(body);
+                    const scrollSync = document.createElement('div'); scrollSync.className = "flex-1 overflow-x-auto custom-scrollbar"; scrollSync.onscroll = (e) => { daysContainer.style.transform = `translateX(-${e.target.scrollLeft}px)`; };
+                    scrollSync.appendChild(timeline); body.appendChild(taskList); body.appendChild(scrollSync); grid.appendChild(body);
                 },
 
                 renderMonth(grid) {
                     const d = Store.session.currentDate;
                     document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-                    grid.className += " grid grid-cols-7 gap-4 pb-10";
+
+                    // RESPONSIVE CHANGE: grid-cols-1 for mobile, grid-cols-7 for desktop
+                    grid.className += " grid grid-cols-1 md:grid-cols-7 gap-4 pb-10";
 
                     const fragment = document.createDocumentFragment();
                     ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(day => {
                         const el = document.createElement('div');
-                        el.className = 'text-center text-[10px] font-black text-slate-400 pb-4 uppercase tracking-widest';
+                        // Hide weekday headers on mobile
+                        el.className = 'hidden md:block text-center text-[10px] font-black text-slate-400 pb-4 uppercase tracking-widest';
                         el.innerText = day;
                         fragment.appendChild(el);
                     });
@@ -1144,23 +714,38 @@ calendar: {
                     const shiftedIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
                     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-                    for (let x = 0; x < shiftedIndex; x++) fragment.appendChild(document.createElement('div'));
+                    // Spacer divs hidden on mobile
+                    for (let x = 0; x < shiftedIndex; x++) {
+                        const spacer = document.createElement('div');
+                        spacer.className = "hidden md:block";
+                        fragment.appendChild(spacer);
+                    }
 
                     const allEvents = Store.getFilteredEvents();
+                    const dayNames = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 
                     for (let i = 1; i <= daysInMonth; i++) {
                         const dateObj = new Date(year, month, i);
                         const isToday = Utils.areDatesEqual(dateObj, new Date());
+                        const dayName = dayNames[dateObj.getDay()];
 
                         const cell = document.createElement('div');
-                        cell.className = `bg-white dark:bg-slate-900 rounded-[1.5rem] border ${isToday ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-slate-100 dark:border-slate-800'} p-3 min-h-[140px] shadow-sm hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all relative group overflow-hidden flex flex-col`;
+                        // Responsive height: auto on mobile to fit content, fixed min-height on desktop
+                        cell.className = `bg-white dark:bg-slate-900 rounded-[1.5rem] border ${isToday ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-slate-100 dark:border-slate-800'} p-3 min-h-[100px] md:min-h-[140px] shadow-sm hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all relative group overflow-hidden flex flex-col`;
 
                         cell.ondragover = (e) => App.drag.handleDragOver(e);
                         cell.ondragleave = (e) => App.drag.handleDragLeave(e);
                         cell.ondrop = (e) => App.drag.handleDrop(e, dateObj, null);
 
                         cell.onclick = () => App.events.openModal(dateObj);
-                        cell.innerHTML = `<span class="text-sm font-black ${isToday ? 'text-rose-500' : 'text-slate-300 dark:text-slate-700'} mb-2 block">${i}</span>`;
+
+                        // Responsive header inside cell
+                        cell.innerHTML = `
+                            <div class="flex justify-between items-baseline mb-2">
+                                <span class="text-sm font-black ${isToday ? 'text-rose-500' : 'text-slate-300 dark:text-slate-700'}">${i}</span>
+                                <span class="md:hidden text-[10px] uppercase font-bold text-slate-400">${dayName}</span>
+                            </div>
+                        `;
 
                         const dayEvents = allEvents.filter(e => Utils.isEventVisible(e, dateObj));
                         dayEvents.sort((a,b) => a.time.localeCompare(b.time));
@@ -1177,9 +762,15 @@ calendar: {
                     endOfWeek.setDate(endOfWeek.getDate() + 6);
 
                     document.getElementById('current-date-display').innerText = `${startOfWeek.getDate()} ${this.MONTHS[startOfWeek.getMonth()].substr(0,3)} - ${endOfWeek.getDate()} ${this.MONTHS[endOfWeek.getMonth()].substr(0,3)} ${endOfWeek.getFullYear()}`;
-                    grid.className += " grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm";
 
-                    grid.appendChild(document.createElement('div'));
+                    // Make Week view scrollable horizontally on mobile
+                    grid.className += " overflow-x-auto";
+
+                    // Container for the grid to ensure min-width on mobile
+                    const container = document.createElement('div');
+                    container.className = "grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm min-w-[800px] md:min-w-0";
+
+                    container.appendChild(document.createElement('div'));
                     for (let i = 0; i < 7; i++) {
                         const curr = new Date(startOfWeek);
                         curr.setDate(curr.getDate() + i);
@@ -1193,7 +784,7 @@ calendar: {
                             head.className = "text-center py-4 border-b border-l border-slate-100 dark:border-slate-800";
                             head.innerHTML = `<div class="text-[10px] font-black text-slate-400 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-slate-700 dark:text-slate-300">${curr.getDate()}</div>`;
                         }
-                        grid.appendChild(head);
+                        container.appendChild(head);
                     }
 
                     const allEvents = Store.getFilteredEvents();
@@ -1202,7 +793,7 @@ calendar: {
                         const timeLabel = document.createElement('div');
                         timeLabel.className = "text-[10px] font-bold text-slate-400 text-right pr-2 pt-2 border-b border-slate-100 dark:border-slate-800 h-24";
                         timeLabel.innerText = `${hour}:00`;
-                        grid.appendChild(timeLabel);
+                        container.appendChild(timeLabel);
 
                         for (let day = 0; day < 7; day++) {
                             const curr = new Date(startOfWeek);
@@ -1227,9 +818,10 @@ calendar: {
                             });
 
                             hourEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, curr)));
-                            grid.appendChild(cell);
+                            container.appendChild(cell);
                         }
                     }
+                    grid.appendChild(container);
                 },
 
                 renderDay(grid) {
@@ -1239,29 +831,19 @@ calendar: {
 
                     const isToday = Utils.areDatesEqual(d, new Date());
                     const head = document.createElement('div');
+                    const dayName = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][d.getDay()];
 
                     if (isToday) {
                         head.className = "p-6 border-b border-rose-500 bg-rose-500 flex justify-between items-center";
-                        head.innerHTML = `
-                            <div>
-                                <span class="text-3xl font-black text-white">${d.getDate()}</span>
-                                <span class="text-xl font-bold text-white uppercase ml-2">${['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][d.getDay()]}</span>
-                            </div>
-                            <span class="text-xs font-black uppercase text-rose-200 tracking-widest border border-rose-200 rounded px-2 py-1">Сегодня</span>
-                        `;
+                        head.innerHTML = `<div><span class="text-3xl font-black text-white">${d.getDate()}</span><span class="text-xl font-bold text-white uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-white uppercase ml-2 md:hidden">${dayName.substr(0,3)}</span></div><span class="text-xs font-black uppercase text-rose-200 tracking-widest border border-rose-200 rounded px-2 py-1">Сегодня</span>`;
                     } else {
                         head.className = "p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center";
-                        head.innerHTML = `
-                            <div>
-                                <span class="text-3xl font-black text-rose-500">${d.getDate()}</span>
-                                <span class="text-xl font-bold text-slate-500 uppercase ml-2">${['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][d.getDay()]}</span>
-                            </div>
-                        `;
+                        head.innerHTML = `<div><span class="text-3xl font-black text-rose-500">${d.getDate()}</span><span class="text-xl font-bold text-slate-500 uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-slate-500 uppercase ml-2 md:hidden">${dayName.substr(0,3)}</span></div>`;
                     }
                     grid.appendChild(head);
 
                     const content = document.createElement('div');
-                    content.className = "grid grid-cols-[60px_1fr] custom-scrollbar h-[600px] overflow-y-auto relative";
+                    content.className = "grid grid-cols-[60px_1fr] custom-scrollbar h-[calc(100vh-250px)] md:h-[600px] overflow-y-auto relative";
 
                     const allEvents = Store.getFilteredEvents();
 
@@ -1301,7 +883,7 @@ calendar: {
                 renderYear(grid) {
                     const year = Store.session.currentDate.getFullYear();
                     document.getElementById('current-date-display').innerText = `${year}`;
-                    grid.className += " grid grid-cols-4 gap-6 pb-10";
+                    grid.className += " grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10"; // Responsive Columns
 
                     const allEvents = Store.getFilteredEvents();
 
@@ -1365,393 +947,220 @@ calendar: {
                         u.name.toLowerCase() === loginOrId.toLowerCase() ||
                         (u.uid && u.uid === loginOrId.toUpperCase())
                     );
-
                     const team = Store.getActiveTeam();
                     if (!userToInvite) return App.ui.showToast("Пользователь не найден", "alert");
                     if (team.members.includes(userToInvite.id)) return App.ui.showToast("Уже в команде", "info");
-
                     team.members.push(userToInvite.id);
                     App.notifications.add(userToInvite.id, `Вас добавили в команду "${team.name}"`, 'info');
-                    Store.save();
-                    App.ui.closeModal('modal-invite');
-                    App.ui.showToast(`Пользователь ${userToInvite.name} добавлен`, "success");
+                    Store.save(); App.ui.closeModal('modal-invite'); App.ui.showToast(`Пользователь ${userToInvite.name} добавлен`, "success");
                 },
-
                 showContextMenu(e, id) {
-                    e.preventDefault();
-                    this.contextTeamId = id;
-                    this.closeUserContextMenu();
-
-                    const team = Store.data.teams.find(t => t.id === id);
-                    if (!team) return;
-
+                    e.preventDefault(); this.contextTeamId = id; this.closeUserContextMenu();
+                    const team = Store.data.teams.find(t => t.id === id); if (!team) return;
                     const isOwner = team.ownerId === Store.session.user.id;
-                    const btnDelete = document.getElementById('ctx-btn-delete-team');
-                    const btnLeave = document.getElementById('ctx-btn-leave-team');
-
-                    if (isOwner) {
-                        btnDelete.classList.remove('hidden');
-                        btnDelete.classList.add('flex');
-                        btnLeave.classList.add('hidden');
-                        btnLeave.classList.remove('flex');
-                    } else {
-                        btnDelete.classList.add('hidden');
-                        btnDelete.classList.remove('flex');
-                        btnLeave.classList.remove('hidden');
-                        btnLeave.classList.add('flex');
-                    }
-
-                    const menu = document.getElementById('team-context-menu');
-                    menu.classList.remove('hidden');
-                    menu.style.left = `${e.clientX}px`;
-                    menu.style.top = `${e.clientY}px`;
+                    const btnDelete = document.getElementById('ctx-btn-delete-team'); const btnLeave = document.getElementById('ctx-btn-leave-team');
+                    if (isOwner) { btnDelete.classList.remove('hidden'); btnDelete.classList.add('flex'); btnLeave.classList.add('hidden'); btnLeave.classList.remove('flex'); }
+                    else { btnDelete.classList.add('hidden'); btnDelete.classList.remove('flex'); btnLeave.classList.remove('hidden'); btnLeave.classList.add('flex'); }
+                    const menu = document.getElementById('team-context-menu'); menu.classList.remove('hidden'); menu.style.left = `${e.clientX}px`; menu.style.top = `${e.clientY}px`;
                 },
-                closeContextMenu() {
-                    const menu = document.getElementById('team-context-menu');
-                    if(menu) menu.classList.add('hidden');
-                    this.contextTeamId = null;
-                },
-
+                closeContextMenu() { const menu = document.getElementById('team-context-menu'); if(menu) menu.classList.add('hidden'); this.contextTeamId = null; },
                 delete() {
                     if(!this.contextTeamId) return;
                     const team = Store.data.teams.find(t => t.id === this.contextTeamId);
-
-                    if (team.ownerId !== Store.session.user.id) {
-                        App.ui.showToast("Только создатель может удалить команду", "alert");
-                        this.closeContextMenu();
-                        return;
-                    }
-
+                    if (team.ownerId !== Store.session.user.id) { App.ui.showToast("Только создатель может удалить команду", "alert"); this.closeContextMenu(); return; }
                     if(!confirm(`Удалить команду "${team ? team.name : ''}"? Это действие нельзя отменить.`)) return;
-
-                    const id = this.contextTeamId;
-                    Store.data.teams = Store.data.teams.filter(t => t.id !== id);
-                    Store.data.events = Store.data.events.filter(e => e.teamId !== id);
-
+                    const id = this.contextTeamId; Store.data.teams = Store.data.teams.filter(t => t.id !== id); Store.data.events = Store.data.events.filter(e => e.teamId !== id);
                     Store.save();
-
-                    if (Store.session.activeTeamId === id) {
-                        this.switch('personal');
-                    } else {
-                        App.ui.refresh();
-                    }
-                    this.closeContextMenu();
-                    App.ui.showToast('Команда удалена', 'success');
+                    if (Store.session.activeTeamId === id) { this.switch('personal'); } else { App.ui.refresh(); }
+                    this.closeContextMenu(); App.ui.showToast('Команда удалена', 'success');
                 },
-
                 leave() {
                     if(!this.contextTeamId) return;
                     const team = Store.data.teams.find(t => t.id === this.contextTeamId);
-
                     if(!confirm(`Вы действительно хотите покинуть команду "${team.name}"?`)) return;
-
                     team.members = team.members.filter(uid => uid !== Store.session.user.id);
-
                     Store.save();
-
-                    if (Store.session.activeTeamId === this.contextTeamId) {
-                        this.switch('personal');
-                    } else {
-                        App.ui.refresh();
-                    }
-
-                    this.closeContextMenu();
-                    App.ui.showToast('Вы покинули команду', 'info');
+                    if (Store.session.activeTeamId === this.contextTeamId) { this.switch('personal'); } else { App.ui.refresh(); }
+                    this.closeContextMenu(); App.ui.showToast('Вы покинули команду', 'info');
                 },
-
                 showUserContextMenu(e, userId) {
-                    e.preventDefault();
-                    this.contextMemberId = userId;
-                    this.closeContextMenu();
-                    const menu = document.getElementById('user-context-menu');
-                    menu.classList.remove('hidden');
-                    menu.style.left = `${e.clientX}px`;
-                    menu.style.top = `${e.clientY}px`;
-
-                    const team = Store.getActiveTeam();
-                    const isOwner = team && team.ownerId === Store.session.user.id;
-                    const btnRemove = document.getElementById('btn-remove-user');
-                    btnRemove.style.display = isOwner ? 'flex' : 'none';
+                    e.preventDefault(); this.contextMemberId = userId; this.closeContextMenu();
+                    const menu = document.getElementById('user-context-menu'); menu.classList.remove('hidden'); menu.style.left = `${e.clientX}px`; menu.style.top = `${e.clientY}px`;
+                    const team = Store.getActiveTeam(); const isOwner = team && team.ownerId === Store.session.user.id;
+                    const btnRemove = document.getElementById('btn-remove-user'); btnRemove.style.display = isOwner ? 'flex' : 'none';
                 },
-                closeUserContextMenu() {
-                    const menu = document.getElementById('user-context-menu');
-                    if(menu) menu.classList.add('hidden');
-                    this.contextMemberId = null;
-                },
+                closeUserContextMenu() { const menu = document.getElementById('user-context-menu'); if(menu) menu.classList.add('hidden'); this.contextMemberId = null; },
                 viewUserProfile() {
                     if(!this.contextMemberId) return;
-                    const user = (Store.data.users || []).find(u => u.id === this.contextMemberId);
-                    if(!user) return;
-
-                    document.getElementById('view-profile-avatar').src = user.avatar;
-                    document.getElementById('view-profile-name').innerText = user.name;
-                    document.getElementById('view-profile-uid').innerText = `ID: ${user.uid || '---'}`;
-
-                    this.closeUserContextMenu();
-                    App.ui.openModal('modal-view-profile');
+                    const user = (Store.data.users || []).find(u => u.id === this.contextMemberId); if(!user) return;
+                    document.getElementById('view-profile-avatar').src = user.avatar; document.getElementById('view-profile-name').innerText = user.name; document.getElementById('view-profile-uid').innerText = `ID: ${user.uid || '---'}`;
+                    this.closeUserContextMenu(); App.ui.openModal('modal-view-profile');
                 },
                 removeMember() {
                     if(!this.contextMemberId) return;
-                    const team = Store.getActiveTeam();
-                    if(!team) return;
-
+                    const team = Store.getActiveTeam(); if(!team) return;
                     if (team.ownerId !== Store.session.user.id) return;
-
                     const userToRemove = (Store.data.users || []).find(u => u.id === this.contextMemberId);
                     if(!confirm(`Удалить участника ${userToRemove ? userToRemove.name : ''} из команды?`)) return;
-
                     team.members = team.members.filter(id => id !== this.contextMemberId);
-
-                    Store.save();
-                    App.ui.refresh();
-                    this.closeUserContextMenu();
-                    App.ui.showToast('Участник удален', 'success');
+                    Store.save(); App.ui.refresh(); this.closeUserContextMenu(); App.ui.showToast('Участник удален', 'success');
                 }
             },
             events: {
-    toggleDeadlineUI() {
-        const hasDeadline = document.getElementById('event-has-deadline').checked;
-        const inputs = document.getElementById('deadline-inputs');
-        if(hasDeadline) { inputs.classList.remove('hidden'); inputs.classList.add('grid'); }
-        else { inputs.classList.add('hidden'); inputs.classList.remove('grid'); }
-    },
-    setRecurrence(type) {
-        document.getElementById('event-recurrence').value = type;
-        ['none', 'daily', 'weekly'].forEach(t => {
-            const btn = document.getElementById(`rec-btn-${t}`);
-            if(t === type) btn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white";
-            else btn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-600";
-        });
-    },
-    handleFileUpload(input) {
-        const file = input.files[0];
-        if(!file) return;
-        if(file.size > 1.5 * 1024 * 1024) { input.value = ''; return App.ui.showToast("Файл слишком большой", "alert"); }
-        const r = new FileReader();
-        r.onload = e => { Store.session.tempFile = { name: file.name, data: e.target.result }; this.updateFileUI(); };
-        r.readAsDataURL(file);
-    },
-    removeFile() { Store.session.tempFile = null; document.getElementById('event-file-input').value = ''; this.updateFileUI(); },
-    updateFileUI() {
-        const file = Store.session.tempFile;
-        if (file) {
-            document.getElementById('file-upload-ui').classList.add('hidden');
-            document.getElementById('file-display-ui').classList.remove('hidden');
-            document.getElementById('file-name-display').innerText = file.name;
-            const link = document.getElementById('file-download-link');
-            link.href = file.data; link.download = file.name;
-        } else {
-            document.getElementById('file-upload-ui').classList.remove('hidden');
-            document.getElementById('file-display-ui').classList.add('hidden');
-        }
-    },
-    openModal(dateObj = null, existing = null, timePreselect = '12:00') {
-        Store.session.currentEventId = existing ? existing.id : null;
-        Store.session.contextDateStr = Utils.formatDateForInput(existing ? (dateObj || new Date(existing.dateStr)) : (dateObj || Store.session.currentDate));
-
-        document.getElementById('modal-event-title').innerText = existing ? "Редактировать" : "Новая задача";
-
-        const team = Store.getActiveTeam();
-        const userId = Store.session.user.id;
-        const isTeamMode = Store.session.activeTeamId !== 'personal';
-        const canEdit = !existing || !isTeamMode || (team && team.ownerId === userId) || (existing && existing.creatorId === userId);
-
-        document.getElementById('btn-delete-event').classList.toggle('hidden', !existing || !canEdit);
-
-        const inputsToLock = ['event-name', 'event-full-date', 'event-time', 'event-has-deadline', 'deadline-date', 'deadline-time', 'event-file-input'];
-        inputsToLock.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.disabled = !canEdit;
-        });
-
-        const blocksToLock = ['recurrence-block', 'participants-block', 'file-upload-ui'];
-        blocksToLock.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                el.style.pointerEvents = canEdit ? 'auto' : 'none';
-                el.style.opacity = canEdit ? '1' : '0.6';
-            }
-        });
-
-        document.getElementById('event-name').value = existing ? existing.title : '';
-
-        document.getElementById('event-full-date').value = Store.session.contextDateStr;
-        document.getElementById('event-time').value = existing ? existing.time : timePreselect;
-
-        const hasDeadline = existing && existing.deadline;
-        document.getElementById('event-has-deadline').checked = !!hasDeadline;
-        document.getElementById('deadline-date').value = hasDeadline ? existing.deadline.date : Store.session.contextDateStr;
-        document.getElementById('deadline-time').value = hasDeadline ? existing.deadline.time : '23:59';
-        this.toggleDeadlineUI();
-
-        const recBlock = document.getElementById('recurrence-block');
-        if (Store.session.activeTeamId === 'personal') {
-            recBlock.classList.remove('hidden');
-            this.setRecurrence(existing && existing.recurrence ? existing.recurrence : 'none');
-        } else {
-            recBlock.classList.add('hidden');
-            this.setRecurrence('none');
-        }
-
-        const btn = document.getElementById('btn-status-toggle');
-        let initialState = 'todo';
-        if (existing) {
-            const isDone = Utils.isEventCompleted(existing, Store.session.contextDateStr);
-            if (isDone) initialState = 'done';
-            else if (existing.pendingReview) initialState = 'review';
-        }
-        this.renderStatusBtn(btn, initialState);
-
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-
-        Store.session.tempFile = existing && existing.file ? existing.file : null;
-        this.updateFileUI();
-
-        if (!canEdit && Store.session.tempFile) {
-            const removeFileBtn = document.querySelector('#file-display-ui button');
-            if(removeFileBtn) removeFileBtn.style.display = 'none';
-        } else {
-            const removeFileBtn = document.querySelector('#file-display-ui button');
-            if(removeFileBtn) removeFileBtn.style.display = 'block';
-        }
-
-        const pBlock = document.getElementById('participants-block');
-        if (Store.session.activeTeamId === 'personal') { pBlock.style.display = 'none'; }
-        else {
-            pBlock.style.display = 'block';
-            const team = Store.getActiveTeam();
-            const members = (Store.data.users || []).filter(u => team.members.includes(u.id));
-            const assigned = existing ? (existing.assignees || []) : [];
-            document.getElementById('modal-users').innerHTML = members.map(u => `
-                 <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors group">
-                    <div class="relative flex items-center"><input type="checkbox" name="assignee" value="${u.id}" ${assigned.includes(u.id) ? 'checked' : ''} class="peer appearance-none w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded checked:bg-rose-500 checked:border-rose-500 transition-colors" ${!canEdit ? 'disabled' : ''}><svg class="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none left-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
-                    <img src="${u.avatar}" class="w-7 h-7 rounded-full object-cover"><span class="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-500 transition-colors">${u.name}</span>
-                </label>`).join('');
-        }
-        App.ui.openModal('modal-event');
-    },
-    toggleStatusUI() {
-        const btn = document.getElementById('btn-status-toggle');
-        const currentState = btn.dataset.state || 'todo';
-        const team = Store.getActiveTeam();
-        const isBoss = team && team.ownerId === Store.session.user.id;
-        const isPersonal = !team;
-
-        let nextState = 'todo';
-
-        if (isPersonal) {
-             nextState = currentState === 'done' ? 'todo' : 'done';
-        } else if (isBoss) {
-             if (currentState === 'done') nextState = 'todo';
-             else nextState = 'done';
-        } else {
-             if (currentState === 'todo') nextState = 'review';
-             else if (currentState === 'review') nextState = 'todo';
-             else if (currentState === 'done') nextState = 'review';
-        }
-        this.renderStatusBtn(btn, nextState);
-    },
-    renderStatusBtn(btn, state) {
-        btn.dataset.state = state;
-        if (state === 'done') {
-            btn.innerText = "ВЫПОЛНЕНО ✓";
-            btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-green-500 text-white shadow-lg shadow-green-500/30";
-        } else if (state === 'review') {
-             btn.innerText = "НА ПРОВЕРКЕ ⏳";
-             btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-amber-400 text-white shadow-lg shadow-amber-400/30";
-        } else {
-            btn.innerText = "В Процессе";
-            btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-300";
-        }
-    },
-    save() {
-        const title = document.getElementById('event-name').value.trim();
-        const dateStr = document.getElementById('event-full-date').value;
-        const time = document.getElementById('event-time').value;
-        const recurrence = document.getElementById('event-recurrence').value;
-
-        if(!title || !dateStr || !time) return App.ui.showToast("Заполните все поля", "alert");
-
-        const hasDeadline = document.getElementById('event-has-deadline').checked;
-        const deadlineData = hasDeadline ? { date: document.getElementById('deadline-date').value, time: document.getElementById('deadline-time').value } : null;
-
-        const statusState = document.getElementById('btn-status-toggle').dataset.state;
-        const isDone = statusState === 'done';
-        const isReview = statusState === 'review';
-
-        const assignees = Store.session.activeTeamId === 'personal' ? [] : Array.from(document.querySelectorAll('input[name="assignee"]:checked')).map(c => parseInt(c.value));
-
-        let existingEvent = Store.session.currentEventId ? Store.data.events.find(e => e.id === Store.session.currentEventId) : null;
-        let completed = existingEvent ? existingEvent.completed : false;
-        let completedDates = existingEvent ? (existingEvent.completedDates || []) : [];
-        const ctxDate = Store.session.contextDateStr || dateStr;
-
-        const team = Store.getActiveTeam();
-
-        // --- НАЧАЛО БЛОКА РЕЙТИНГА ---
-        if (team && team.ownerId === Store.session.user.id && isDone) {
-            const wasCompleted = existingEvent && Utils.isEventCompleted(existingEvent, ctxDate);
-
-            if (!wasCompleted) {
-                // Инициализируем хранилище рейтинга в команде, если его нет
-                if (!team.ratings) team.ratings = {};
-
-                assignees.forEach(userId => {
-                    // Начисляем рейтинг ВНУТРИ команды
-                    const currentScore = team.ratings[userId] || 0;
-                    team.ratings[userId] = currentScore + 100;
-
-                    if (userId !== Store.session.user.id) {
-                        App.notifications.add(userId, `🏆 Вы получили +100 рейтинга в команде "${team.name}"!`, 'success');
+                toggleDeadlineUI() {
+                    const hasDeadline = document.getElementById('event-has-deadline').checked;
+                    const inputs = document.getElementById('deadline-inputs');
+                    if(hasDeadline) { inputs.classList.remove('hidden'); inputs.classList.add('grid'); }
+                    else { inputs.classList.add('hidden'); inputs.classList.remove('grid'); }
+                },
+                setRecurrence(type) {
+                    document.getElementById('event-recurrence').value = type;
+                    ['none', 'daily', 'weekly'].forEach(t => {
+                        const btn = document.getElementById(`rec-btn-${t}`);
+                        if(t === type) btn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white";
+                        else btn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-600";
+                    });
+                },
+                handleFileUpload(input) {
+                    const file = input.files[0];
+                    if(!file) return;
+                    if(file.size > 1.5 * 1024 * 1024) { input.value = ''; return App.ui.showToast("Файл слишком большой", "alert"); }
+                    const r = new FileReader();
+                    r.onload = e => { Store.session.tempFile = { name: file.name, data: e.target.result }; this.updateFileUI(); };
+                    r.readAsDataURL(file);
+                },
+                removeFile() { Store.session.tempFile = null; document.getElementById('event-file-input').value = ''; this.updateFileUI(); },
+                updateFileUI() {
+                    const file = Store.session.tempFile;
+                    if (file) {
+                        document.getElementById('file-upload-ui').classList.add('hidden');
+                        document.getElementById('file-display-ui').classList.remove('hidden');
+                        document.getElementById('file-name-display').innerText = file.name;
+                        const link = document.getElementById('file-download-link');
+                        link.href = file.data; link.download = file.name;
+                    } else {
+                        document.getElementById('file-upload-ui').classList.remove('hidden');
+                        document.getElementById('file-display-ui').classList.add('hidden');
                     }
-                });
-                App.ui.showToast("Рейтинг начислен!", "success");
-            }
-        }
-        // --- КОНЕЦ БЛОКА РЕЙТИНГА ---
+                },
+                openModal(dateObj = null, existing = null, timePreselect = '12:00') {
+                    Store.session.currentEventId = existing ? existing.id : null;
+                    Store.session.contextDateStr = Utils.formatDateForInput(existing ? (dateObj || new Date(existing.dateStr)) : (dateObj || Store.session.currentDate));
 
-        if (recurrence !== 'none') {
-            if (isDone) {
-                if (!completedDates.includes(ctxDate)) completedDates.push(ctxDate);
-            } else {
-                completedDates = completedDates.filter(d => d !== ctxDate);
-            }
-        } else {
-            completed = isDone;
-        }
+                    document.getElementById('modal-event-title').innerText = existing ? "Редактировать" : "Новая задача";
 
-        if (isReview && (!existingEvent || !existingEvent.pendingReview)) {
-            if (team && team.ownerId !== Store.session.user.id) {
-                App.notifications.add(team.ownerId, `Задача "${title}" ожидает проверки`, 'info');
-            }
-        }
+                    const team = Store.getActiveTeam();
+                    const userId = Store.session.user.id;
+                    const isTeamMode = Store.session.activeTeamId !== 'personal';
+                    const canEdit = !existing || !isTeamMode || (team && team.ownerId === userId) || (existing && existing.creatorId === userId);
 
-        const eventData = {
-            id: Store.session.currentEventId || Utils.generateId(),
-            title, dateStr, time,
-            completed, completedDates,
-            recurrence,
-            overdue: false,
-            pendingReview: isReview,
-            deadline: deadlineData,
-            context: Store.session.activeTeamId === 'personal' ? 'personal' : 'team',
-            teamId: Store.session.activeTeamId, creatorId: Store.session.user.id, assignees: assignees, file: Store.session.tempFile
-        };
+                    document.getElementById('btn-delete-event').classList.toggle('hidden', !existing || !canEdit);
 
-        if (Store.session.currentEventId) { const idx = Store.data.events.findIndex(e => e.id === Store.session.currentEventId); if(idx !== -1) Store.data.events[idx] = eventData; }
-        else { Store.data.events.push(eventData); }
-        Store.save();
-        App.ui.closeModal('modal-event');
-    },
-    delete() {
-        if(!Store.session.currentEventId) return;
-        if(!confirm("Удалить задачу?")) return;
-        Store.data.events = Store.data.events.filter(e => e.id !== Store.session.currentEventId);
-        Store.save();
-        App.ui.closeModal('modal-event');
-    }
-},
+                    const inputsToLock = ['event-name', 'event-full-date', 'event-time', 'event-has-deadline', 'deadline-date', 'deadline-time', 'event-file-input'];
+                    inputsToLock.forEach(id => { const el = document.getElementById(id); if(el) el.disabled = !canEdit; });
+
+                    const blocksToLock = ['recurrence-block', 'participants-block', 'file-upload-ui'];
+                    blocksToLock.forEach(id => { const el = document.getElementById(id); if(el) { el.style.pointerEvents = canEdit ? 'auto' : 'none'; el.style.opacity = canEdit ? '1' : '0.6'; } });
+
+                    document.getElementById('event-name').value = existing ? existing.title : '';
+                    document.getElementById('event-full-date').value = Store.session.contextDateStr;
+                    document.getElementById('event-time').value = existing ? existing.time : timePreselect;
+
+                    const hasDeadline = existing && existing.deadline;
+                    document.getElementById('event-has-deadline').checked = !!hasDeadline;
+                    document.getElementById('deadline-date').value = hasDeadline ? existing.deadline.date : Store.session.contextDateStr;
+                    document.getElementById('deadline-time').value = hasDeadline ? existing.deadline.time : '23:59';
+                    this.toggleDeadlineUI();
+
+                    const recBlock = document.getElementById('recurrence-block');
+                    if (Store.session.activeTeamId === 'personal') { recBlock.classList.remove('hidden'); this.setRecurrence(existing && existing.recurrence ? existing.recurrence : 'none'); }
+                    else { recBlock.classList.add('hidden'); this.setRecurrence('none'); }
+
+                    const btn = document.getElementById('btn-status-toggle');
+                    let initialState = 'todo';
+                    if (existing) {
+                        const isDone = Utils.isEventCompleted(existing, Store.session.contextDateStr);
+                        if (isDone) initialState = 'done'; else if (existing.pendingReview) initialState = 'review';
+                    }
+                    this.renderStatusBtn(btn, initialState);
+                    btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
+
+                    Store.session.tempFile = existing && existing.file ? existing.file : null; this.updateFileUI();
+                    if (!canEdit && Store.session.tempFile) { const removeFileBtn = document.querySelector('#file-display-ui button'); if(removeFileBtn) removeFileBtn.style.display = 'none'; }
+                    else { const removeFileBtn = document.querySelector('#file-display-ui button'); if(removeFileBtn) removeFileBtn.style.display = 'block'; }
+
+                    const pBlock = document.getElementById('participants-block');
+                    if (Store.session.activeTeamId === 'personal') { pBlock.style.display = 'none'; }
+                    else {
+                        pBlock.style.display = 'block'; const team = Store.getActiveTeam();
+                        const members = (Store.data.users || []).filter(u => team.members.includes(u.id));
+                        const assigned = existing ? (existing.assignees || []) : [];
+                        document.getElementById('modal-users').innerHTML = members.map(u => `
+                             <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors group">
+                                <div class="relative flex items-center"><input type="checkbox" name="assignee" value="${u.id}" ${assigned.includes(u.id) ? 'checked' : ''} class="peer appearance-none w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded checked:bg-rose-500 checked:border-rose-500 transition-colors" ${!canEdit ? 'disabled' : ''}><svg class="absolute w-3 h-3 text-white hidden peer-checked:block pointer-events-none left-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
+                                <img src="${u.avatar}" class="w-7 h-7 rounded-full object-cover"><span class="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-500 transition-colors">${u.name}</span>
+                            </label>`).join('');
+                    }
+                    App.ui.openModal('modal-event');
+                },
+                toggleStatusUI() {
+                    const btn = document.getElementById('btn-status-toggle'); const currentState = btn.dataset.state || 'todo';
+                    const team = Store.getActiveTeam(); const isBoss = team && team.ownerId === Store.session.user.id; const isPersonal = !team;
+                    let nextState = 'todo';
+                    if (isPersonal) { nextState = currentState === 'done' ? 'todo' : 'done'; }
+                    else if (isBoss) { if (currentState === 'done') nextState = 'todo'; else nextState = 'done'; }
+                    else { if (currentState === 'todo') nextState = 'review'; else if (currentState === 'review') nextState = 'todo'; else if (currentState === 'done') nextState = 'review'; }
+                    this.renderStatusBtn(btn, nextState);
+                },
+                renderStatusBtn(btn, state) {
+                    btn.dataset.state = state;
+                    if (state === 'done') { btn.innerText = "ВЫПОЛНЕНО ✓"; btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-green-500 text-white shadow-lg shadow-green-500/30"; }
+                    else if (state === 'review') { btn.innerText = "НА ПРОВЕРКЕ ⏳"; btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-amber-400 text-white shadow-lg shadow-amber-400/30"; }
+                    else { btn.innerText = "В Процессе"; btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-300"; }
+                },
+                save() {
+                    const title = document.getElementById('event-name').value.trim(); const dateStr = document.getElementById('event-full-date').value;
+                    const time = document.getElementById('event-time').value; const recurrence = document.getElementById('event-recurrence').value;
+                    if(!title || !dateStr || !time) return App.ui.showToast("Заполните все поля", "alert");
+                    const hasDeadline = document.getElementById('event-has-deadline').checked;
+                    const deadlineData = hasDeadline ? { date: document.getElementById('deadline-date').value, time: document.getElementById('deadline-time').value } : null;
+                    const statusState = document.getElementById('btn-status-toggle').dataset.state; const isDone = statusState === 'done'; const isReview = statusState === 'review';
+                    const assignees = Store.session.activeTeamId === 'personal' ? [] : Array.from(document.querySelectorAll('input[name="assignee"]:checked')).map(c => parseInt(c.value));
+                    let existingEvent = Store.session.currentEventId ? Store.data.events.find(e => e.id === Store.session.currentEventId) : null;
+                    let completed = existingEvent ? existingEvent.completed : false; let completedDates = existingEvent ? (existingEvent.completedDates || []) : [];
+                    const ctxDate = Store.session.contextDateStr || dateStr;
+                    const team = Store.getActiveTeam();
+
+                    // RATING LOGIC
+                    if (team && team.ownerId === Store.session.user.id && isDone) {
+                        const wasCompleted = existingEvent && Utils.isEventCompleted(existingEvent, ctxDate);
+                        if (!wasCompleted) {
+                            if (!team.ratings) team.ratings = {};
+                            assignees.forEach(userId => {
+                                const currentScore = team.ratings[userId] || 0; team.ratings[userId] = currentScore + 100;
+                                if (userId !== Store.session.user.id) { App.notifications.add(userId, `🏆 Вы получили +100 рейтинга в команде "${team.name}"!`, 'success'); }
+                            });
+                            App.ui.showToast("Рейтинг начислен!", "success");
+                        }
+                    }
+
+                    if (recurrence !== 'none') { if (isDone) { if (!completedDates.includes(ctxDate)) completedDates.push(ctxDate); } else { completedDates = completedDates.filter(d => d !== ctxDate); } } else { completed = isDone; }
+                    if (isReview && (!existingEvent || !existingEvent.pendingReview)) { if (team && team.ownerId !== Store.session.user.id) { App.notifications.add(team.ownerId, `Задача "${title}" ожидает проверки`, 'info'); } }
+                    const eventData = {
+                        id: Store.session.currentEventId || Utils.generateId(), title, dateStr, time, completed, completedDates, recurrence, overdue: false, pendingReview: isReview, deadline: deadlineData,
+                        context: Store.session.activeTeamId === 'personal' ? 'personal' : 'team', teamId: Store.session.activeTeamId, creatorId: Store.session.user.id, assignees: assignees, file: Store.session.tempFile
+                    };
+                    if (Store.session.currentEventId) { const idx = Store.data.events.findIndex(e => e.id === Store.session.currentEventId); if(idx !== -1) Store.data.events[idx] = eventData; }
+                    else { Store.data.events.push(eventData); }
+                    Store.save(); App.ui.closeModal('modal-event');
+                },
+                delete() {
+                    if(!Store.session.currentEventId) return;
+                    if(!confirm("Удалить задачу?")) return;
+                    Store.data.events = Store.data.events.filter(e => e.id !== Store.session.currentEventId);
+                    Store.save(); App.ui.closeModal('modal-event');
+                }
+            },
             notifications: {
                 add(userId, msg, type = 'info') {
                     if(!Store.data.notifications) Store.data.notifications = [];
@@ -1760,18 +1169,14 @@ calendar: {
                 },
                 updateBadge() {
                     const myNotifs = (Store.data.notifications || []).filter(n => n.to === Store.session.user.id && !n.read);
-                    const badge = document.getElementById('notif-badge');
-                    if (myNotifs.length > 0) badge.classList.add('active'); else badge.classList.remove('active');
+                    const badge = document.getElementById('notif-badge'); if (myNotifs.length > 0) badge.classList.add('active'); else badge.classList.remove('active');
                 },
                 clearAll() { Store.data.notifications = (Store.data.notifications || []).filter(n => n.to !== Store.session.user.id); Store.save(); this.updateBadge(); document.getElementById('notif-dropdown').classList.add('hidden'); },
                 checkDeadlines() {
-                    const now = new Date();
-                    let changed = false;
+                    const now = new Date(); let changed = false;
                     (Store.data.events || []).forEach(ev => {
                         if (ev.completed || ev.overdue) return;
-                        let targetDate;
-                        if (ev.deadline) targetDate = new Date(ev.deadline.date + 'T' + ev.deadline.time);
-                        else targetDate = new Date(ev.dateStr + 'T' + ev.time);
+                        let targetDate; if (ev.deadline) targetDate = new Date(ev.deadline.date + 'T' + ev.deadline.time); else targetDate = new Date(ev.dateStr + 'T' + ev.time);
                         if (now > targetDate) { ev.overdue = true; changed = true; App.notifications.add(ev.creatorId, `Задача "${ev.title}" просрочена!`, 'alert'); }
                     });
                     if (changed) { Store.save(); App.calendar.render(); }
@@ -1782,13 +1187,9 @@ calendar: {
         initApp();
 
         window.addEventListener('click', (e) => {
-            const btn = document.getElementById('view-btn');
-            const drop = document.getElementById('view-dropdown');
-            if (btn && drop && !btn.contains(e.target) && !drop.contains(e.target)) {
-                App.ui.closeViewDropdown();
-            }
-            App.teams.closeContextMenu();
-            App.teams.closeUserContextMenu();
+            const btn = document.getElementById('view-btn'); const drop = document.getElementById('view-dropdown');
+            if (btn && drop && !btn.contains(e.target) && !drop.contains(e.target)) { App.ui.closeViewDropdown(); }
+            App.teams.closeContextMenu(); App.teams.closeUserContextMenu();
         });
     </script>
 </body>
