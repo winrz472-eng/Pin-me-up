@@ -872,86 +872,241 @@
     MONTHS: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
 
     switchView(viewName) {
-        Store.session.view = viewName; const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
-        const labelEl = document.getElementById('current-view-label'); if(labelEl) labelEl.innerText = labels[viewName]; App.ui.closeViewDropdown(); this.render();
+        Store.session.view = viewName;
+        const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
+        const labelEl = document.getElementById('current-view-label');
+        if (labelEl) labelEl.innerText = labels[viewName];
+        App.ui.closeViewDropdown();
+        this.render();
     },
 
     navigate(step) {
-        const d = Store.session.currentDate; const view = Store.session.view;
-        if (view === 'day') d.setDate(d.getDate() + step); else if (view === 'week') d.setDate(d.getDate() + (step * 7)); else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step); else if (view === 'year') d.setFullYear(d.getFullYear() + step);
-        Store.session.currentDate = new Date(d); this.render();
+        const d = Store.session.currentDate;
+        const view = Store.session.view;
+        if (view === 'day') d.setDate(d.getDate() + step);
+        else if (view === 'week') d.setDate(d.getDate() + (step * 7));
+        else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step);
+        else if (view === 'year') d.setFullYear(d.getFullYear() + step);
+        Store.session.currentDate = new Date(d);
+        this.render();
     },
 
-    // Вспомогательная функция создания ячейки дня
     createDayCell(dateObj, isCurrentMonth, allEvents) {
         const isToday = Utils.areDatesEqual(dateObj, new Date());
-        const dayName = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][dateObj.getDay()];
+        const dayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'][dateObj.getDay()];
 
         const cell = document.createElement('div');
-
-        // Стилизация: если не текущий месяц, делаем тусклее и меняем фон
         let baseClasses = "rounded-[1.5rem] border p-3 min-h-[100px] md:min-h-[140px] shadow-sm transition-all relative group overflow-hidden flex flex-col ";
 
         if (isCurrentMonth) {
-            // Стиль для текущего месяца (как было раньше)
             baseClasses += `glass hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${isToday ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-slate-100 dark:border-slate-800'}`;
         } else {
-            // Стиль для соседних месяцев (тусклые, скрыты на мобильных, чтобы не засорять ленту)
             baseClasses += "hidden md:flex bg-slate-100/50 dark:bg-slate-900/30 border-transparent opacity-60 hover:opacity-100 cursor-pointer hover:bg-white dark:hover:bg-slate-800 border-slate-100 dark:border-slate-800";
         }
 
         cell.className = baseClasses;
-
         cell.ondragover = (e) => App.drag.handleDragOver(e);
         cell.ondragleave = (e) => App.drag.handleDragLeave(e);
         cell.ondrop = (e) => App.drag.handleDrop(e, dateObj, null);
         cell.onclick = () => App.events.openModal(dateObj);
 
-        // Рендеринг содержимого ячейки
         cell.innerHTML = `
             <div class="flex justify-between items-baseline mb-2">
-                <span class="text-sm font-black ${isToday ? 'text-rose-500' : (isCurrentMonth ? 'text-slate-300 dark:text-slate-700' : 'text-slate-300 dark:text-slate-700')}">${dateObj.getDate()}</span>
+                <span class="text-sm font-black ${isToday ? 'text-rose-500' : 'text-slate-300 dark:text-slate-700'}">${dateObj.getDate()}</span>
                 <span class="md:hidden text-[10px] uppercase font-bold text-slate-400">${dayName}</span>
             </div>
         `;
 
         const dayEvents = allEvents.filter(e => Utils.isEventVisible(e, dateObj));
-        dayEvents.sort((a,b) => a.time.localeCompare(b.time));
+        dayEvents.sort((a, b) => a.time.localeCompare(b.time));
         dayEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, dateObj)));
 
         return cell;
     },
 
     createEventCard(ev, dateContext) {
-        const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext)); const isOverdue = ev.overdue;
+        const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext));
+        const isOverdue = ev.overdue;
         let baseClass = "p-1.5 text-left relative z-10 task-card shadow-sm text-[10px] rounded mb-1 truncate ";
-        if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 "; else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 "; else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 "; else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
-        const div = document.createElement('div'); div.className = baseClass; div.setAttribute('draggable', 'true'); div.ondragstart = (e) => App.drag.handleDragStart(e, ev); div.ondragend = (e) => App.drag.handleDragEnd(e);
-        let icon = ""; if(ev.pendingReview && !isDone) icon = "⏳ ";
+        if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 ";
+        else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 ";
+        else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 ";
+        else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
+
+        const div = document.createElement('div');
+        div.className = baseClass;
+        div.setAttribute('draggable', 'true');
+        div.ondragstart = (e) => App.drag.handleDragStart(e, ev);
+        div.ondragend = (e) => App.drag.handleDragEnd(e);
+
+        let icon = "";
+        if (ev.pendingReview && !isDone) icon = "⏳ ";
         let content = `<span class="font-black mr-1">${ev.time}</span> ${icon}${Utils.escapeHtml(ev.title)}`;
         if (ev.deadline && !isDone && !ev.pendingReview) content += ` <span class="ml-1 text-[9px] font-bold text-red-500" title="Дедлайн: ${ev.deadline.date} ${ev.deadline.time}">🔥</span>`;
-        div.innerHTML = content; div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
+
+        div.innerHTML = content;
+        div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
         return div;
     },
 
+    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ RENDER ---
     render() {
-        const view = Store.session.view; const grid = document.getElementById('calendar-grid'); grid.innerHTML = ''; grid.className = 'animate-grid-entry';
-        if (view === 'month') this.renderMonth(grid); else if (view === 'week') this.renderWeek(grid); else if (view === 'day') this.renderDay(grid); else if (view === 'year') this.renderYear(grid); else if (view === 'gantt') this.renderGantt(grid);
+        const view = Store.session.view;
+        const grid = document.getElementById('calendar-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        grid.className = 'animate-grid-entry';
+
+        if (view === 'month') this.renderMonth(grid);
+        else if (view === 'week') this.renderWeek(grid);
+        else if (view === 'day') this.renderDay(grid);
+        else if (view === 'year') this.renderYear(grid);
+        else if (view === 'gantt') this.renderGantt(grid);
     },
 
-    // Оставим Gantt без изменений, он длинный, скопируйте его из исходника если нужно, или он останется в памяти браузера,
-    // но лучше убедиться, что он есть в коде. В данном ответе я сокращу его для ясности изменений в renderMonth.
-    // Если вы копируете весь объект, убедитесь, что renderGantt, renderWeek, renderDay, renderYear остались на месте.
-    // Ниже приведен полный renderMonth с изменениями:
+    // --- ФУНКЦИЯ GANTT ТЕПЕРЬ ОТДЕЛЬНО ---
+    renderGantt(grid) {
+        const d = Store.session.currentDate;
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        document.getElementById('current-date-display').innerText = `${this.MONTHS[month]} ${year}`;
+
+        grid.className = "flex flex-col h-full overflow-hidden bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm";
+
+        // Шапка
+        const header = document.createElement('div');
+        header.className = "flex border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 sticky top-0 z-20";
+        const spacer = document.createElement('div');
+        spacer.className = "w-64 shrink-0 p-3 font-black text-[10px] text-slate-400 uppercase tracking-widest border-r border-slate-200 dark:border-slate-700 flex items-center";
+        spacer.innerText = "Задача";
+        header.appendChild(spacer);
+
+        const timelineContainer = document.createElement('div');
+        timelineContainer.className = "flex flex-1 overflow-hidden";
+
+        setTimeout(() => {
+            const bodyScroll = document.getElementById('gantt-body-scroll');
+            const headScroll = document.getElementById('gantt-head-scroll');
+            if (bodyScroll && headScroll) {
+                bodyScroll.onscroll = () => { headScroll.scrollLeft = bodyScroll.scrollLeft; };
+            }
+        }, 100);
+
+        const timelineScroll = document.createElement('div');
+        timelineScroll.id = 'gantt-head-scroll';
+        timelineScroll.className = "flex overflow-x-hidden";
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayCell = document.createElement('div');
+            const dateObj = new Date(year, month, i);
+            const isToday = Utils.areDatesEqual(dateObj, new Date());
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            dayCell.className = `w-10 shrink-0 text-center py-2 text-[10px] font-bold border-r border-slate-100 dark:border-slate-800 ${isToday ? 'bg-rose-500 text-white' : (isWeekend ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400' : 'text-slate-600 dark:text-slate-300')}`;
+            dayCell.innerText = i;
+            timelineScroll.appendChild(dayCell);
+        }
+        header.appendChild(timelineScroll);
+        grid.appendChild(header);
+
+        // Тело
+        const body = document.createElement('div');
+        body.className = "flex-1 overflow-y-auto custom-scrollbar relative";
+        const bodyContent = document.createElement('div');
+        bodyContent.className = "flex min-h-full";
+        const tasksCol = document.createElement('div');
+        tasksCol.className = "w-64 shrink-0 bg-white/30 dark:bg-slate-900/30 border-r border-slate-200 dark:border-slate-700 sticky left-0 z-10 backdrop-blur-sm";
+        const barsScroll = document.createElement('div');
+        barsScroll.id = 'gantt-body-scroll';
+        barsScroll.className = "flex-1 overflow-x-auto custom-scrollbar relative";
+
+        const barsBg = document.createElement('div');
+        barsBg.className = "flex h-full absolute inset-0 pointer-events-none";
+        for (let i = 1; i <= daysInMonth; i++) {
+            const bgCell = document.createElement('div');
+            const dateObj = new Date(year, month, i);
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            bgCell.className = `w-10 shrink-0 border-r border-slate-100 dark:border-slate-800/50 h-full ${isWeekend ? 'bg-slate-50/50 dark:bg-slate-800/30' : ''}`;
+            barsBg.appendChild(bgCell);
+        }
+        barsScroll.appendChild(barsBg);
+
+        const barsContainer = document.createElement('div');
+        barsContainer.className = "relative min-w-max pb-4 pt-2";
+        barsContainer.style.width = `${daysInMonth * 40}px`;
+
+        const events = Store.getFilteredEvents();
+        events.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
+
+        if (events.length === 0) {
+            tasksCol.innerHTML = `<div class="p-4 text-xs text-slate-400 italic">Нет задач в этом месяце</div>`;
+        }
+
+        events.forEach(ev => {
+            const startDate = new Date(ev.dateStr);
+            let endDate = ev.deadline ? new Date(ev.deadline.date) : new Date(startDate);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            const monthStart = new Date(year, month, 1);
+            const monthEnd = new Date(year, month, daysInMonth);
+
+            if (endDate < monthStart || startDate > monthEnd) return;
+
+            const taskRow = document.createElement('div');
+            taskRow.className = "h-10 flex items-center px-3 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer truncate";
+            taskRow.innerHTML = `<div class="truncate text-xs font-bold text-slate-700 dark:text-slate-200">${Utils.escapeHtml(ev.title)}</div>`;
+            taskRow.onclick = () => App.events.openModal(startDate, ev);
+            tasksCol.appendChild(taskRow);
+
+            const barRow = document.createElement('div');
+            barRow.className = "h-10 relative border-b border-transparent";
+
+            let startDay = startDate.getDate();
+            let duration = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+
+            if (startDate < monthStart) {
+                const diff = (monthStart - startDate) / (1000 * 60 * 60 * 24);
+                duration -= diff;
+                startDay = 1;
+            }
+            if (endDate > monthEnd) {
+                duration = (monthEnd - new Date(Math.max(startDate, monthStart))) / (1000 * 60 * 60 * 24) + 1;
+            }
+
+            const leftPos = (startDay - 1) * 40;
+            const width = duration * 40 - 4;
+
+            const bar = document.createElement('div');
+            const isDone = ev.completed;
+            const colorClass = isDone ? "bg-green-500" : (ev.overdue ? "bg-red-500" : (Store.session.activeTeamId === 'personal' ? "bg-indigo-500" : "bg-rose-500"));
+
+            bar.className = `absolute top-2 h-6 rounded-md shadow-sm ${colorClass} hover:brightness-110 cursor-pointer transition-all flex items-center px-2`;
+            bar.style.left = `${leftPos + 2}px`;
+            bar.style.width = `${Math.max(width, 36)}px`;
+
+            bar.innerHTML = `<span class="text-[9px] font-black text-white truncate w-full">${Utils.escapeHtml(ev.title)}</span>`;
+            bar.onclick = () => App.events.openModal(startDate, ev);
+
+            barRow.appendChild(bar);
+            barsContainer.appendChild(barRow);
+        });
+
+        barsScroll.appendChild(barsContainer);
+        bodyContent.appendChild(tasksCol);
+        bodyContent.appendChild(barsScroll);
+        body.appendChild(bodyContent);
+        grid.appendChild(body);
+    },
 
     renderMonth(grid) {
         const d = Store.session.currentDate;
         document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-
         grid.className += " grid grid-cols-1 md:grid-cols-7 gap-4 pb-10";
 
         const fragment = document.createDocumentFragment();
-        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(day => {
+        ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(day => {
             const el = document.createElement('div');
             el.className = 'hidden md:block text-center text-[10px] font-black text-slate-400 pb-4 uppercase tracking-widest';
             el.innerText = day;
@@ -960,36 +1115,24 @@
 
         const year = d.getFullYear(), month = d.getMonth();
         const firstDayIndex = new Date(year, month, 1).getDay();
-        const shiftedIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // 0 = Пн
+        const shiftedIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const allEvents = Store.getFilteredEvents();
-
-        // 1. Дни ПРЕДЫДУЩЕГО месяца
-        const prevMonthLastDate = new Date(year, month, 0).getDate(); // Последнее число пред. месяца
+        const prevMonthLastDate = new Date(year, month, 0).getDate();
 
         for (let x = 0; x < shiftedIndex; x++) {
-            // Вычисляем число: (последний день - смещение + 1 + индекс)
             const dayNum = prevMonthLastDate - shiftedIndex + 1 + x;
             const dateObj = new Date(year, month - 1, dayNum);
-
-            // Создаем ячейку как "не текущий месяц"
             fragment.appendChild(this.createDayCell(dateObj, false, allEvents));
         }
 
-        // 2. Дни ТЕКУЩЕГО месяца
         for (let i = 1; i <= daysInMonth; i++) {
             const dateObj = new Date(year, month, i);
-            // Создаем ячейку как "текущий месяц"
             fragment.appendChild(this.createDayCell(dateObj, true, allEvents));
         }
 
-        // 3. Дни СЛЕДУЮЩЕГО месяца (добиваем сетку)
         const totalCellsSoFar = shiftedIndex + daysInMonth;
-        // Нам нужно, чтобы сетка была ровной (кратной 7)
         const cellsToFill = (7 - (totalCellsSoFar % 7)) % 7;
-
-        // Опционально: можно добавить еще строку, если месяц занимает мало места,
-        // чтобы высота календаря не прыгала, но пока заполним просто до конца недели.
 
         for (let j = 1; j <= cellsToFill; j++) {
             const dateObj = new Date(year, month + 1, j);
@@ -999,182 +1142,170 @@
         grid.appendChild(fragment);
     },
 
-                renderWeek(grid) {
-    const d = Store.session.currentDate;
-    const startOfWeek = Utils.getWeekStart(d);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    renderWeek(grid) {
+        const d = Store.session.currentDate;
+        const startOfWeek = Utils.getWeekStart(d);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
+        const weekNum = Utils.getWeekNumber(startOfWeek);
 
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Получаем номер недели и добавляем в заголовок ---
-    const weekNum = Utils.getWeekNumber(startOfWeek);
+        document.getElementById('current-date-display').innerText = `Неделя ${weekNum} • ${startOfWeek.getDate()} ${this.MONTHS[startOfWeek.getMonth()].substr(0, 3)} - ${endOfWeek.getDate()} ${this.MONTHS[endOfWeek.getMonth()].substr(0, 3)} ${endOfWeek.getFullYear()}`;
 
-    document.getElementById('current-date-display').innerText =
-        `Неделя ${weekNum} • ${startOfWeek.getDate()} ${this.MONTHS[startOfWeek.getMonth()].substr(0,3)} - ${endOfWeek.getDate()} ${this.MONTHS[endOfWeek.getMonth()].substr(0,3)} ${endOfWeek.getFullYear()}`;
-    // -----------------------------------------------------------------------
+        grid.className += " overflow-x-auto";
+        const container = document.createElement('div');
+        container.className = "glass grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm min-w-[800px] md:min-w-0";
 
-    grid.className += " overflow-x-auto";
-
-    const container = document.createElement('div');
-    container.className = "glass grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm min-w-[800px] md:min-w-0";
-
-    container.appendChild(document.createElement('div'));
-    for (let i = 0; i < 7; i++) {
-        const curr = new Date(startOfWeek);
-        curr.setDate(curr.getDate() + i);
-        const isToday = Utils.areDatesEqual(curr, new Date());
-        const head = document.createElement('div');
-
-        if(isToday) {
-            head.className = "text-center py-4 border-b border-l border-rose-500 bg-rose-500 text-white";
-            head.innerHTML = `<div class="text-[10px] font-black text-rose-200 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-white">${curr.getDate()}</div>`;
-        } else {
-            head.className = "text-center py-4 border-b border-l border-slate-100 dark:border-slate-800";
-            head.innerHTML = `<div class="text-[10px] font-black text-slate-400 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-slate-700 dark:text-slate-300">${curr.getDate()}</div>`;
-        }
-        container.appendChild(head);
-    }
-
-    const allEvents = Store.getFilteredEvents();
-
-    for (let hour = 0; hour < 24; hour++) {
-        const timeLabel = document.createElement('div');
-        timeLabel.className = "text-[10px] font-bold text-slate-400 text-right pr-2 pt-2 border-b border-slate-100 dark:border-slate-800 h-24";
-        timeLabel.innerText = `${hour}:00`;
-        container.appendChild(timeLabel);
-
-        for (let day = 0; day < 7; day++) {
+        container.appendChild(document.createElement('div'));
+        for (let i = 0; i < 7; i++) {
             const curr = new Date(startOfWeek);
-            curr.setDate(curr.getDate() + day);
+            curr.setDate(curr.getDate() + i);
+            const isToday = Utils.areDatesEqual(curr, new Date());
+            const head = document.createElement('div');
+            if (isToday) {
+                head.className = "text-center py-4 border-b border-l border-rose-500 bg-rose-500 text-white";
+                head.innerHTML = `<div class="text-[10px] font-black text-rose-200 uppercase">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i]}</div><div class="text-xl font-black text-white">${curr.getDate()}</div>`;
+            } else {
+                head.className = "text-center py-4 border-b border-l border-slate-100 dark:border-slate-800";
+                head.innerHTML = `<div class="text-[10px] font-black text-slate-400 uppercase">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i]}</div><div class="text-xl font-black text-slate-700 dark:text-slate-300">${curr.getDate()}</div>`;
+            }
+            container.appendChild(head);
+        }
 
-            const cell = document.createElement('div');
-            cell.className = "border-b border-l border-slate-100 dark:border-slate-800 h-24 relative hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors p-1 overflow-y-auto custom-scrollbar";
+        const allEvents = Store.getFilteredEvents();
 
-            cell.ondragover = (e) => App.drag.handleDragOver(e);
-            cell.ondragleave = (e) => App.drag.handleDragLeave(e);
-            cell.ondrop = (e) => App.drag.handleDrop(e, curr, `${String(hour).padStart(2,'0')}:00`);
+        for (let hour = 0; hour < 24; hour++) {
+            const timeLabel = document.createElement('div');
+            timeLabel.className = "text-[10px] font-bold text-slate-400 text-right pr-2 pt-2 border-b border-slate-100 dark:border-slate-800 h-24";
+            timeLabel.innerText = `${hour}:00`;
+            container.appendChild(timeLabel);
 
-            cell.onclick = () => {
-                const targetDate = new Date(curr);
-                App.events.openModal(targetDate, null, `${String(hour).padStart(2,'0')}:00`);
-            };
+            for (let day = 0; day < 7; day++) {
+                const curr = new Date(startOfWeek);
+                curr.setDate(curr.getDate() + day);
+                const cell = document.createElement('div');
+                cell.className = "border-b border-l border-slate-100 dark:border-slate-800 h-24 relative hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors p-1 overflow-y-auto custom-scrollbar";
+                cell.ondragover = (e) => App.drag.handleDragOver(e);
+                cell.ondragleave = (e) => App.drag.handleDragLeave(e);
+                cell.ondrop = (e) => App.drag.handleDrop(e, curr, `${String(hour).padStart(2, '0')}:00`);
+                cell.onclick = () => {
+                    const targetDate = new Date(curr);
+                    App.events.openModal(targetDate, null, `${String(hour).padStart(2, '0')}:00`);
+                };
+
+                const hourEvents = allEvents.filter(e => {
+                    const isVisible = Utils.isEventVisible(e, curr);
+                    const eHour = parseInt(e.time.split(':')[0]);
+                    return isVisible && eHour === hour;
+                });
+
+                hourEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, curr)));
+                container.appendChild(cell);
+            }
+        }
+        grid.appendChild(container);
+    },
+
+    renderDay(grid) {
+        const d = Store.session.currentDate;
+        document.getElementById('current-date-display').innerText = `${d.getDate()} ${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+        grid.className += " max-w-3xl mx-auto glass rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden";
+
+        const isToday = Utils.areDatesEqual(d, new Date());
+        const head = document.createElement('div');
+        const dayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'][d.getDay()];
+
+        if (isToday) {
+            head.className = "p-6 border-b border-rose-500 bg-rose-500 flex justify-between items-center";
+            head.innerHTML = `<div><span class="text-3xl font-black text-white">${d.getDate()}</span><span class="text-xl font-bold text-white uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-white uppercase ml-2 md:hidden">${dayName.substr(0, 3)}</span></div><span class="text-xs font-black uppercase text-rose-200 tracking-widest border border-rose-200 rounded px-2 py-1">Сегодня</span>`;
+        } else {
+            head.className = "p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center";
+            head.innerHTML = `<div><span class="text-3xl font-black text-rose-500">${d.getDate()}</span><span class="text-xl font-bold text-slate-500 uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-slate-500 uppercase ml-2 md:hidden">${dayName.substr(0, 3)}</span></div>`;
+        }
+        grid.appendChild(head);
+
+        const content = document.createElement('div');
+        content.className = "grid grid-cols-[60px_1fr] custom-scrollbar h-[calc(100vh-250px)] md:h-[600px] overflow-y-auto relative";
+
+        const allEvents = Store.getFilteredEvents();
+
+        for (let hour = 0; hour < 24; hour++) {
+            const timeDiv = document.createElement('div');
+            timeDiv.className = "text-xs font-bold text-slate-400 text-center pt-4 border-b border-r border-slate-100 dark:border-slate-800 min-h-[80px]";
+            timeDiv.innerText = `${hour}:00`;
+
+            const slotDiv = document.createElement('div');
+            slotDiv.className = "border-b border-slate-100 dark:border-slate-800 min-h-[80px] p-2 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors relative";
+
+            slotDiv.ondragover = (e) => App.drag.handleDragOver(e);
+            slotDiv.ondragleave = (e) => App.drag.handleDragLeave(e);
+            slotDiv.ondrop = (e) => App.drag.handleDrop(e, d, `${String(hour).padStart(2, '0')}:00`);
+            slotDiv.onclick = () => App.events.openModal(d, null, `${String(hour).padStart(2, '0')}:00`);
 
             const hourEvents = allEvents.filter(e => {
-                const isVisible = Utils.isEventVisible(e, curr);
+                const isVisible = Utils.isEventVisible(e, d);
                 const eHour = parseInt(e.time.split(':')[0]);
                 return isVisible && eHour === hour;
             });
 
-            hourEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, curr)));
-            container.appendChild(cell);
+            hourEvents.forEach(ev => {
+                const card = this.createEventCard(ev, d);
+                card.className = card.className.replace("text-[10px]", "text-sm").replace("mb-1", "mb-2");
+                card.classList.add("py-2", "px-3");
+                slotDiv.appendChild(card);
+            });
+
+            content.appendChild(timeDiv);
+            content.appendChild(slotDiv);
+        }
+        grid.appendChild(content);
+    },
+
+    renderYear(grid) {
+        const year = Store.session.currentDate.getFullYear();
+        document.getElementById('current-date-display').innerText = `${year}`;
+        grid.className += " grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10";
+
+        const allEvents = Store.getFilteredEvents();
+
+        for (let m = 0; m < 12; m++) {
+            const monthContainer = document.createElement('div');
+            monthContainer.className = "glass rounded-2xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-lg transition-all relative hover:border-rose-400";
+            monthContainer.onclick = () => { Store.session.currentDate.setMonth(m); this.switchView('month'); };
+
+            const title = document.createElement('h4');
+            title.className = "text-rose-500 font-black uppercase text-xs mb-2 tracking-widest cursor-pointer";
+            title.innerText = this.MONTHS[m];
+            monthContainer.appendChild(title);
+
+            const miniGrid = document.createElement('div');
+            miniGrid.className = "grid grid-cols-7 gap-1 text-center";
+
+            const firstDay = new Date(year, m, 1).getDay();
+            const shift = firstDay === 0 ? 6 : firstDay - 1;
+            for (let i = 0; i < shift; i++) miniGrid.appendChild(document.createElement('div'));
+
+            const days = new Date(year, m + 1, 0).getDate();
+            for (let d = 1; d <= days; d++) {
+                const dayEl = document.createElement('div');
+                const dateObj = new Date(year, m, d);
+                const count = allEvents.filter(e => Utils.isEventVisible(e, dateObj)).length;
+                let cellClass = "text-[9px] w-6 h-6 flex items-center justify-center mx-auto rounded-full cursor-pointer transition-all hover:scale-125 hover:bg-slate-100 dark:hover:bg-slate-700 ";
+                let colorClass = "text-slate-400 dark:text-slate-500";
+
+                if (count > 0) colorClass = "bg-rose-100 text-rose-600 font-bold";
+                if (count > 2) colorClass = "bg-rose-500 text-white font-bold";
+                if (Utils.areDatesEqual(dateObj, new Date())) colorClass = "border border-rose-500 text-rose-500 font-black";
+
+                dayEl.className = cellClass + colorClass;
+                dayEl.innerText = d;
+                dayEl.onclick = (e) => { e.stopPropagation(); Store.session.currentDate = new Date(year, m, d); this.switchView('day'); };
+                miniGrid.appendChild(dayEl);
+            }
+            monthContainer.appendChild(miniGrid);
+            grid.appendChild(monthContainer);
         }
     }
-    grid.appendChild(container);
 },
-
-                renderDay(grid) {
-                    const d = Store.session.currentDate;
-                    document.getElementById('current-date-display').innerText = `${d.getDate()} ${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-                    // ИСПРАВЛЕНИЕ: Заменили bg-white dark:bg-slate-900 на glass
-                    grid.className += " max-w-3xl mx-auto glass rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden";
-
-                    const isToday = Utils.areDatesEqual(d, new Date());
-                    const head = document.createElement('div');
-                    const dayName = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][d.getDay()];
-
-                    if (isToday) {
-                        head.className = "p-6 border-b border-rose-500 bg-rose-500 flex justify-between items-center";
-                        head.innerHTML = `<div><span class="text-3xl font-black text-white">${d.getDate()}</span><span class="text-xl font-bold text-white uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-white uppercase ml-2 md:hidden">${dayName.substr(0,3)}</span></div><span class="text-xs font-black uppercase text-rose-200 tracking-widest border border-rose-200 rounded px-2 py-1">Сегодня</span>`;
-                    } else {
-                        head.className = "p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center";
-                        head.innerHTML = `<div><span class="text-3xl font-black text-rose-500">${d.getDate()}</span><span class="text-xl font-bold text-slate-500 uppercase ml-2 hidden md:inline">${dayName}</span><span class="text-lg font-bold text-slate-500 uppercase ml-2 md:hidden">${dayName.substr(0,3)}</span></div>`;
-                    }
-                    grid.appendChild(head);
-
-                    const content = document.createElement('div');
-                    content.className = "grid grid-cols-[60px_1fr] custom-scrollbar h-[calc(100vh-250px)] md:h-[600px] overflow-y-auto relative";
-
-                    const allEvents = Store.getFilteredEvents();
-
-                    for (let hour = 0; hour < 24; hour++) {
-                         const timeDiv = document.createElement('div');
-                         timeDiv.className = "text-xs font-bold text-slate-400 text-center pt-4 border-b border-r border-slate-100 dark:border-slate-800 min-h-[80px]";
-                         timeDiv.innerText = `${hour}:00`;
-
-                         const slotDiv = document.createElement('div');
-                         slotDiv.className = "border-b border-slate-100 dark:border-slate-800 min-h-[80px] p-2 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors relative";
-
-                         slotDiv.ondragover = (e) => App.drag.handleDragOver(e);
-                         slotDiv.ondragleave = (e) => App.drag.handleDragLeave(e);
-                         slotDiv.ondrop = (e) => App.drag.handleDrop(e, d, `${String(hour).padStart(2,'0')}:00`);
-
-                         slotDiv.onclick = () => App.events.openModal(d, null, `${String(hour).padStart(2,'0')}:00`);
-
-                         const hourEvents = allEvents.filter(e => {
-                            const isVisible = Utils.isEventVisible(e, d);
-                            const eHour = parseInt(e.time.split(':')[0]);
-                            return isVisible && eHour === hour;
-                        });
-
-                        hourEvents.forEach(ev => {
-                            const card = this.createEventCard(ev, d);
-                            card.className = card.className.replace("text-[10px]", "text-sm").replace("mb-1", "mb-2");
-                            card.classList.add("py-2", "px-3");
-                            slotDiv.appendChild(card);
-                        });
-
-                        content.appendChild(timeDiv);
-                        content.appendChild(slotDiv);
-                    }
-                    grid.appendChild(content);
-                },
-
-                renderYear(grid) {
-                    const year = Store.session.currentDate.getFullYear();
-                    document.getElementById('current-date-display').innerText = `${year}`;
-                    grid.className += " grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10";
-
-                    const allEvents = Store.getFilteredEvents();
-
-                    for(let m=0; m<12; m++) {
-                        const monthContainer = document.createElement('div');
-                        // ИСПРАВЛЕНИЕ: Заменили bg-white dark:bg-slate-900 на glass
-                        monthContainer.className = "glass rounded-2xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-lg transition-all relative hover:border-rose-400";
-                        monthContainer.onclick = () => { Store.session.currentDate.setMonth(m); this.switchView('month'); };
-
-                        const title = document.createElement('h4');
-                        title.className = "text-rose-500 font-black uppercase text-xs mb-2 tracking-widest cursor-pointer";
-                        title.innerText = this.MONTHS[m];
-                        monthContainer.appendChild(title);
-
-                        const miniGrid = document.createElement('div');
-                        miniGrid.className = "grid grid-cols-7 gap-1 text-center";
-
-                        const firstDay = new Date(year, m, 1).getDay();
-                        const shift = firstDay === 0 ? 6 : firstDay - 1;
-                        for(let i=0; i<shift; i++) miniGrid.appendChild(document.createElement('div'));
-
-                        const days = new Date(year, m+1, 0).getDate();
-                        for(let d=1; d<=days; d++) {
-                            const dayEl = document.createElement('div');
-                            const dateObj = new Date(year, m, d);
-                            const count = allEvents.filter(e => Utils.isEventVisible(e, dateObj)).length;
-                            let cellClass = "text-[9px] w-6 h-6 flex items-center justify-center mx-auto rounded-full cursor-pointer transition-all hover:scale-125 hover:bg-slate-100 dark:hover:bg-slate-700 ";
-                            let colorClass = "text-slate-400 dark:text-slate-500";
-
-                            if (count > 0) colorClass = "bg-rose-100 text-rose-600 font-bold";
-                            if (count > 2) colorClass = "bg-rose-500 text-white font-bold";
-                            if (Utils.areDatesEqual(dateObj, new Date())) colorClass = "border border-rose-500 text-rose-500 font-black";
-
-                            dayEl.className = cellClass + colorClass;
-                            dayEl.innerText = d;
-                            dayEl.onclick = (e) => { e.stopPropagation(); Store.session.currentDate = new Date(year, m, d); this.switchView('day'); };
-                            miniGrid.appendChild(dayEl);
-                        }
-                        monthContainer.appendChild(miniGrid);
-                        grid.appendChild(monthContainer);
-                    }
-                }
-            },
             teams: {
                 contextTeamId: null,
                 contextMemberId: null,
