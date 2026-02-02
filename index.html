@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -13,8 +13,12 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .glass { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
-        .dark .glass { background: rgba(15, 23, 42, 0.85); }
+        /* Определяем переменную по умолчанию */
+        :root { --glass-opacity: 0.85; }
+
+        /* Используем переменную в альфа-канале цвета */
+        .glass { backdrop-filter: blur(12px); background: rgba(255, 255, 255, var(--glass-opacity)); transition: background 0.3s; }
+        .dark .glass { background: rgba(15, 23, 42, var(--glass-opacity)); }
 
         .modal-overlay {
             background: rgba(0, 0, 0, 0.5);
@@ -98,8 +102,10 @@
         .landing-content { z-index: 10; }
         .hero-btn { background-size: 200% auto; transition: 0.5s; }
         .hero-btn:hover { background-position: right center; transform: scale(1.05); box-shadow: 0 0 30px rgba(244, 63, 94, 0.5); }
+
+        /* Исправленные стили карточек для мобильных */
         .feature-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
-        .feature-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-5px); border-color: rgba(244, 63, 94, 0.3); }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-3px); border-color: rgba(244, 63, 94, 0.3); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 overflow-hidden h-screen flex transition-colors duration-300">
@@ -109,13 +115,14 @@
         <div class="absolute top-0 left-0 w-full p-8 flex justify-between items-center z-20">
             <div class="text-white/30 font-black text-xs tracking-[0.3em] cursor-default select-none">Pin me up</div>
         </div>
+
         <div id="landing-main" class="landing-content text-center px-6 relative transition-all duration-500 transform scale-100 opacity-100">
              <div class="mb-8 relative inline-block group">
                 <div class="absolute inset-0 bg-rose-500 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                <img src="photo_2026-01-31_21-37-55.jpg" alt="Logo" class="w-24 h-24 mx-auto rounded-3xl relative shadow-2xl z-10 object-cover">
+                <img src="photo_2026-01-31_21-37-55.jpg" onerror="this.src='https://api.dicebear.com/7.x/shapes/svg?seed=pinmeup'" alt="Logo" class="w-24 h-24 mx-auto rounded-3xl relative shadow-2xl z-10 object-cover bg-slate-800">
             </div>
-            <h1 class="text-6xl md:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-sm select-none">Pin me up</h1>
-            <p class="text-slate-400 text-lg md:text-xl font-medium mb-6 tracking-wide">Организуй хаос. Достигай целей.</p>
+            <h1 class="text-5xl md:text-8xl font-black text-white mb-2 tracking-tighter drop-shadow-sm select-none">Pin me up</h1>
+            <p class="text-slate-400 text-base md:text-xl font-medium mb-6 tracking-wide">Организуй хаос. Достигай целей.</p>
             <div class="flex justify-center mb-10">
                 <button onclick="toggleFeatures()" class="text-white/60 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors flex items-center gap-2 group px-4 py-2 rounded-lg hover:bg-white/5">
                     <span class="group-hover:text-rose-400 transition-colors">Функции</span><span class="bg-white/10 p-1 rounded group-hover:bg-rose-500/20 transition-colors">✨</span>
@@ -123,17 +130,54 @@
             </div>
             <button onclick="startExperience()" class="hero-btn bg-gradient-to-r from-rose-500 via-orange-500 to-rose-500 text-white font-black uppercase text-sm md:text-base px-10 py-5 rounded-2xl shadow-xl tracking-widest cursor-pointer">Начать работу</button>
         </div>
-        <div id="landing-features" class="landing-content absolute inset-0 flex flex-col items-center justify-center hidden opacity-0 transition-all duration-500 transform scale-95 p-6 z-30">
-            <h2 class="text-4xl md:text-5xl font-black text-white mb-10 tracking-tight">Возможности</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl w-full">
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">📆</div><h3 class="text-white font-bold text-lg mb-1">Умный календарь</h3><p class="text-slate-400 text-xs leading-relaxed">Режимы: День, Неделя, Месяц, Год, Гант.</p></div>
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">👥</div><h3 class="text-white font-bold text-lg mb-1">Команды</h3><p class="text-slate-400 text-xs leading-relaxed">Создавайте команды и управляйте ролями.</p></div>
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🏆</div><h3 class="text-white font-bold text-lg mb-1">Геймификация</h3><p class="text-slate-400 text-xs leading-relaxed">Получайте рейтинг за задачи.</p></div>
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">📎</div><h3 class="text-white font-bold text-lg mb-1">Файлы и Дедлайны</h3><p class="text-slate-400 text-xs leading-relaxed">Прикрепляйте документы и следите за сроками.</p></div>
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🌗</div><h3 class="text-white font-bold text-lg mb-1">Темная тема</h3><p class="text-slate-400 text-xs leading-relaxed">Комфортная работа ночью.</p></div>
-                <div class="feature-card p-6 rounded-2xl"><div class="text-2xl mb-3">🖱</div><h3 class="text-white font-bold text-lg mb-1">Drag & Drop</h3><p class="text-slate-400 text-xs leading-relaxed">Перетаскивайте задачи в календаре.</p></div>
+
+        <div id="landing-features" class="landing-content absolute inset-0 flex flex-col items-center justify-start md:justify-center hidden opacity-0 transition-all duration-500 transform scale-95 p-4 z-30 overflow-y-auto custom-scrollbar bg-slate-900/50 backdrop-blur-md">
+            <div class="w-full max-w-5xl flex flex-col items-center my-auto py-12 md:py-0">
+                <h2 class="text-3xl md:text-5xl font-black text-white mb-6 md:mb-10 tracking-tight">Возможности</h2>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 w-full max-w-4xl">
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">📆</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Календарь</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Месяц, Неделя, Гант</p>
+                    </div>
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">👥</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Команды</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Совместная работа</p>
+                    </div>
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">🏆</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Рейтинг</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Баллы за задачи</p>
+                    </div>
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">📎</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Файлы</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Прикрепляй доки</p>
+                    </div>
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">🌗</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Темы</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Светлая / Темная</p>
+                    </div>
+
+                    <div class="feature-card p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                        <div class="text-2xl mb-2">🖱</div>
+                        <h3 class="text-white font-bold text-sm md:text-lg mb-1">Drag & Drop</h3>
+                        <p class="text-slate-400 text-[10px] md:text-xs">Удобное управление</p>
+                    </div>
+                </div>
+
+                <button onclick="toggleFeatures()" class="mt-8 md:mt-12 text-slate-400 hover:text-white font-bold text-xs uppercase tracking-[0.2em] transition-colors py-4 px-8 border border-white/10 rounded-xl hover:bg-white/10">
+                    Назад
+                </button>
             </div>
-            <button onclick="toggleFeatures()" class="mt-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2"><span>← Назад</span></button>
         </div>
     </div>
 
@@ -146,6 +190,9 @@
             <div class="space-y-4">
                 <input type="text" id="auth-login" placeholder="Логин" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 font-bold transition-all">
                 <input type="password" id="auth-pass" placeholder="Пароль" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 font-bold transition-all">
+
+                <input type="password" id="auth-pass-confirm" placeholder="Повторите пароль" class="hidden w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 font-bold transition-all">
+
                 <button onclick="App.auth.handle()" id="auth-btn-main" class="w-full py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-all hover:shadow-lg hover:shadow-rose-500/30">Войти</button>
                 <div class="flex justify-center pt-2"><button onclick="App.auth.toggleMode()" id="auth-switch-btn" class="text-xs text-slate-500 font-bold uppercase hover:text-rose-500 transition-colors">Нет аккаунта? Зарегистрироваться</button></div>
             </div>
@@ -157,7 +204,7 @@
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white/95 dark:bg-slate-900/95 glass border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col z-50 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 shadow-2xl md:shadow-none h-full">
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
-                <img src="photo_2026-01-31_21-37-55.jpg" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 object-cover">
+                <img src="photo_2026-01-31_21-37-55.jpg" onerror="this.src='https://api.dicebear.com/7.x/shapes/svg?seed=pinmeup'" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 object-cover">
                 <h1 class="text-2xl font-black tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-600 drop-shadow-sm cursor-default">Pin Me Up</h1>
             </div>
             <button onclick="App.ui.toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-600">✕</button>
@@ -195,41 +242,57 @@
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden relative">
-        <header class="h-auto md:h-20 bg-white/50 dark:bg-slate-900/50 glass border-b border-slate-200 dark:border-slate-800 px-4 py-4 md:py-0 md:px-8 flex flex-col md:flex-row items-center justify-between z-10 shrink-0 gap-4">
+        <header class="h-auto md:h-20 bg-white/60 dark:bg-slate-900/60 glass border-b border-slate-200 dark:border-slate-800 px-4 py-4 md:py-0 md:px-8 flex flex-col md:flex-row items-center justify-between z-10 shrink-0 gap-3 transition-all">
 
-            <div class="flex items-center justify-between w-full md:w-auto gap-4">
-                <button onclick="App.ui.toggleSidebar()" class="md:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                </button>
-
-                <div class="flex items-center gap-2 md:gap-3">
-                     <button onclick="App.calendar.navigate(-1)" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all text-sm font-bold shadow-sm">←</button>
-                     <button onclick="App.calendar.navigate(1)" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all text-sm font-bold shadow-sm">→</button>
+            <div class="flex md:hidden items-center justify-between w-full">
+                <div class="flex items-center gap-3">
+                    <button onclick="App.ui.toggleSidebar()" class="p-2.5 bg-white dark:bg-slate-800 text-slate-500 hover:text-rose-500 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 active:scale-95 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h8m-8 6h16" /></svg>
+                    </button>
+                    <h2 id="current-date-display-mobile" class="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100"></h2>
                 </div>
-                <h2 id="current-date-display" class="text-lg md:text-xl font-black tracking-tight min-w-[140px] text-center md:text-left"></h2>
+
+                <img id="display-user-avatar-mobile" onclick="App.ui.openModal('modal-settings')" class="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-md object-cover bg-slate-200 cursor-pointer active:scale-95 transition-transform">
             </div>
 
-            <div class="flex items-center gap-4 w-full md:w-auto justify-end">
-                <div class="relative z-30">
-                    <button id="view-btn" onclick="App.ui.toggleViewDropdown()" class="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800 font-bold text-xs uppercase px-4 py-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <div class="hidden md:flex items-center gap-4">
+                <button onclick="App.ui.toggleSidebar()" class="hidden md:hidden lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <div class="flex items-center gap-2">
+                     <button onclick="App.calendar.navigate(-1)" class="w-9 h-9 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-sm font-bold shadow-sm active:scale-95">←</button>
+                     <button onclick="App.calendar.navigate(1)" class="w-9 h-9 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-sm font-bold shadow-sm active:scale-95">→</button>
+                </div>
+                <h2 id="current-date-display" class="text-xl font-black tracking-tight min-w-[140px]"></h2>
+            </div>
+
+            <div class="flex items-center justify-between w-full md:w-auto gap-3 md:gap-4">
+
+                <div class="relative z-30 flex-1 md:flex-none">
+                    <button id="view-btn" onclick="App.ui.toggleViewDropdown()" class="w-full md:w-auto flex items-center justify-between gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm font-bold text-xs uppercase px-4 py-3 rounded-2xl active:scale-95 transition-all text-slate-700 dark:text-slate-200">
                         <span id="current-view-label">Месяц</span>
                         <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" id="view-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                    <div id="view-dropdown" class="custom-dropdown-menu absolute right-0 top-full mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 p-1.5 overflow-hidden">
-                        <button onclick="App.calendar.switchView('gantt')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-2">Гант</button>
-                        <button onclick="App.calendar.switchView('day')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">День</button>
-                        <button onclick="App.calendar.switchView('week')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">Неделя</button>
-                        <button onclick="App.calendar.switchView('month')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors mb-0.5">Месяц</button>
-                        <button onclick="App.calendar.switchView('year')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Год</button>
+                    <div id="view-dropdown" class="custom-dropdown-menu absolute left-0 md:left-auto md:right-0 top-full mt-2 w-full md:w-36 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 overflow-hidden z-[60]">
+                        <button onclick="App.calendar.switchView('gantt')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Гант</button>
+                        <button onclick="App.calendar.switchView('day')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">День</button>
+                        <button onclick="App.calendar.switchView('week')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Неделя</button>
+                        <button onclick="App.calendar.switchView('month')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Месяц</button>
+                        <button onclick="App.calendar.switchView('year')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">Год</button>
                     </div>
                 </div>
 
+                <div class="flex md:hidden items-center bg-slate-100 dark:bg-slate-800 rounded-full p-1 gap-1">
+                     <button onclick="App.calendar.navigate(-1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-xs font-bold active:scale-90 transition-all">←</button>
+                     <button onclick="App.calendar.navigate(1)" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm text-xs font-bold active:scale-90 transition-all">→</button>
+                </div>
+
                 <div class="relative">
-                    <button onclick="App.ui.toggleNotifications()" class="p-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:text-rose-500 transition-colors relative border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                    <button onclick="App.ui.toggleNotifications()" class="w-10 h-10 md:w-auto md:h-auto md:p-2.5 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full md:rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:text-rose-500 transition-all active:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <div id="notif-badge" class="notification-badge"></div>
+                        <div id="notif-badge" class="notification-badge top-0 right-0 md:top-0 md:right-0"></div>
                     </button>
-                    <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-4 w-72 md:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden transform origin-top-right transition-all">
+                    <div id="notif-dropdown" class="hidden absolute right-0 top-full mt-4 w-72 md:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[60] overflow-hidden transform origin-top-right transition-all">
                         <div class="p-3 border-b dark:border-slate-800 font-black text-[10px] uppercase text-slate-400 bg-slate-50 dark:bg-slate-900/50 flex justify-between">
                             <span>Уведомления</span>
                             <button onclick="App.notifications.clearAll()" class="hover:text-rose-500 transition-colors">Очистить</button>
@@ -238,8 +301,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 pl-0 md:pl-6 border-l-0 md:border-l border-slate-200 dark:border-slate-800">
-                    <div class="text-right hidden md:block">
+                <div class="hidden md:flex items-center gap-4 pl-6 border-l border-slate-200 dark:border-slate-800">
+                    <div class="text-right">
                         <p id="display-user-name" class="text-sm font-black leading-none mb-1"></p>
                         <p id="display-role" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">User</p>
                     </div>
@@ -315,12 +378,37 @@
         </div>
     </div>
     <div id="modal-view-profile" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4"><div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800 flex flex-col items-center"><div class="w-full flex justify-end mb-2"><button onclick="App.ui.closeModal('modal-view-profile')" class="text-slate-400 hover:text-slate-600">✕</button></div><img id="view-profile-avatar" src="" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4"><h3 id="view-profile-name" class="text-2xl font-black text-center mb-1"></h3><p id="view-profile-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" onclick="App.utils.copyId(this)" title="Нажмите, чтобы скопировать"></p></div></div>
-    <div id="modal-settings" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4"><div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800"><div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black">Настройки</h3> <button onclick="App.ui.closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600">✕</button></div><div class="mb-8"><p class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Оформление</p><div class="p-1 bg-slate-100 dark:bg-slate-800 rounded-xl flex"><button onclick="App.ui.setTheme('light')" id="theme-btn-light" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Светлая</button><button onclick="App.ui.setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Темная</button></div></div><div class="flex flex-col items-center mb-8"><div class="relative group cursor-pointer"><img id="settings-avatar" onclick="document.getElementById('profile-upload').click()" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4 transition-opacity group-hover:opacity-80"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-white font-bold text-xs">Изменить</div></div><input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="App.auth.uploadAvatar(this)"><input type="text" id="settings-name" class="text-center font-black text-xl bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-rose-500 outline-none w-full pb-1 transition-colors" placeholder="Ваше имя"><div class="flex items-center justify-center gap-2 mt-1"><p id="settings-user-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" title="Нажмите, чтобы скопировать" onclick="App.utils.copyId(this)">ID: ---</p></div></div><div class="space-y-3"><button onclick="App.auth.saveProfile()" class="w-full py-3.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase hover:shadow-lg transition-all">Сохранить</button><button onclick="App.auth.logout()" class="w-full py-3.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl text-xs font-bold transition-colors">Выйти из аккаунта</button></div></div></div>
+    <div id="modal-settings" class="modal-overlay fixed inset-0 z-[200] flex items-center justify-center p-4"><div class="modal-content bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border dark:border-slate-800"><div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black">Настройки</h3> <button onclick="App.ui.closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600">✕</button></div><div class="mb-8"><p class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Оформление</p><div class="p-1 bg-slate-100 dark:bg-slate-800 rounded-xl flex"><button onclick="App.ui.setTheme('light')" id="theme-btn-light" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Светлая</button><button onclick="App.ui.setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Темная</button></div><div class="mb-8"></div>
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-2 text-center tracking-widest">Обои</p>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('wallpaper-upload-input').click()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-900/20 hover:text-rose-500 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Загрузить
+                    </button>
+                    <button onclick="App.ui.clearWallpaper()" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 rounded-xl text-xs font-bold transition-all" title="Сбросить">
+                        ✕
+                    </button>
+                </div>
+                <input type="file" id="wallpaper-upload-input" accept="image/*" class="hidden" onchange="App.ui.handleWallpaperUpload(this)">
+            </div>
+        <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Прозрачность панелей</p>
+                    <span id="opacity-value-display" class="text-[10px] font-bold text-slate-500">85%</span>
+                </div>
+                <input type="range" id="opacity-slider" min="0.2" max="1" step="0.05" value="0.85"
+                       oninput="App.ui.setOpacity(this.value)"
+                       class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500">
+            </div>
+            
+            
+        <div class="flex flex-col items-center mb-8"><div class="relative group cursor-pointer"><img id="settings-avatar" onclick="document.getElementById('profile-upload').click()" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100 dark:border-slate-800 shadow-sm mb-4 transition-opacity group-hover:opacity-80"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none text-white font-bold text-xs">Изменить</div></div><input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="App.auth.uploadAvatar(this)"><input type="text" id="settings-name" class="text-center font-black text-xl bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-rose-500 outline-none w-full pb-1 transition-colors" placeholder="Ваше имя"><div class="flex items-center justify-center gap-2 mt-1"><p id="settings-user-uid" class="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg cursor-pointer hover:text-rose-500 transition-colors" title="Нажмите, чтобы скопировать" onclick="App.utils.copyId(this)">ID: ---</p></div></div><div class="space-y-3"><button onclick="App.auth.saveProfile()" class="w-full py-3.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase hover:shadow-lg transition-all">Сохранить</button><button onclick="App.auth.logout()" class="w-full py-3.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl text-xs font-bold transition-colors">Выйти из аккаунта</button></div></div></div>
 
     <div id="team-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-40 py-1"><button id="ctx-btn-delete-team" onclick="App.teams.delete()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg> Удалить</button><button id="ctx-btn-leave-team" onclick="App.teams.leave()" class="hidden w-full text-left px-4 py-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Выйти</button></div>
     <div id="user-context-menu" class="hidden fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden w-48 py-1"><button onclick="App.teams.viewUserProfile()" class="w-full text-left px-4 py-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors flex items-center gap-2 border-b border-slate-50 dark:border-slate-700"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> Профиль</button><button id="btn-remove-user" onclick="App.teams.removeMember()" class="w-full text-left px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg> Удалить из команды</button></div>
 
    <script>
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ
         const firebaseConfig = {
           apiKey: "AIzaSyBBgjvfz34xrwZ07P7MHQQwwAaY6TLxCEw",
           authDomain: "pin-me-up.firebaseapp.com",
@@ -358,30 +446,93 @@
         }
 
         function initApp() {
-            if (!firebaseConfig.apiKey) { alert("Вставьте ключи Firebase!"); return; }
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
+            // ЗАЩИТА: Если Firebase не загрузился (нет интернета), просто скрываем лоадер
+            if (typeof firebase === 'undefined') {
+                console.error("Firebase не загружен. Проверьте интернет.");
+                document.getElementById('loader').style.display = 'none';
+                const landing = document.getElementById('landing-screen');
+                if(landing) {
+                    landing.classList.remove('hidden');
+                    landing.style.opacity = '1';
+                }
+                return;
+            }
 
-            const storedUser = localStorage.getItem('pin_v2_session');
+            try {
+                if (!firebaseConfig.apiKey) { alert("Вставьте ключи Firebase!"); return; }
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.database();
+            } catch (e) {
+                console.error("Ошибка Firebase:", e);
+                // Продолжаем работу, даже если Firebase упал, чтобы показать интерфейс
+            }
+
+            // ЗАЩИТА: Оборачиваем чтение localStorage в try-catch, чтобы избежать белого экрана
+            let storedUser = null;
+            try {
+                const rawUser = localStorage.getItem('pin_v2_session');
+                if (rawUser && rawUser !== "undefined") {
+                    storedUser = JSON.parse(rawUser);
+                }
+            } catch (e) {
+                console.error("Ошибка чтения localStorage:", e);
+                localStorage.removeItem('pin_v2_session'); // Очищаем битые данные
+            }
+
             if (storedUser) {
-                Store.session.user = JSON.parse(storedUser);
+                Store.session.user = storedUser;
                 Store.connectDB();
             } else {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    const landing = document.getElementById('landing-screen');
-                    landing.classList.remove('hidden');
-                    setTimeout(() => landing.style.opacity = '1', 50);
-                }, 500);
+                // Если пользователя нет или ошибка, показываем Лендинг
+                const loader = document.getElementById('loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        const landing = document.getElementById('landing-screen');
+                        if(landing) {
+                            landing.classList.remove('hidden');
+                            setTimeout(() => landing.style.opacity = '1', 50);
+                        }
+                    }, 500);
+                }
             }
 
             if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
             }
+
+            // --- НОВОЕ: Применение обоев при старте ---
+            const savedWallpaper = localStorage.getItem('pin_v2_wallpaper');
+            if (savedWallpaper) {
+                App.ui.applyWallpaper(savedWallpaper);
+            }
+
+            const savedOpacity = localStorage.getItem('pin_v2_opacity');
+            if (savedOpacity) {
+                App.ui.setOpacity(savedOpacity);
+                // Если модальное окно еще не создано, значение слайдера обновится при его открытии,
+                // но нам нужно установить его, если оно уже в DOM (в данном случае оно статично в HTML)
+                const slider = document.getElementById('opacity-slider');
+                if (slider) slider.value = savedOpacity;
+            }
+
         }
 
         const Utils = {
+            getWeekNumber: (d) => {
+
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+
+            const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+            },
             escapeHtml: (text) => text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '',
             formatDateForInput: (dateObj) => {
                 const y = dateObj.getFullYear();
@@ -424,24 +575,29 @@
             data: { users: [], teams: [], events: [], notifications: [] },
             session: { user: null, activeTeamId: localStorage.getItem('pin_v2_active_team') || 'personal', currentDate: new Date(), view: 'month', currentEventId: null, tempAvatar: "", tempFile: null, contextDateStr: null },
             connectDB() {
-                db.ref('/').on('value', (snapshot) => {
-                    const val = snapshot.val();
-                    if (val) {
-                        this.data.users = val.users || []; this.data.teams = val.teams || []; this.data.events = val.events || []; this.data.notifications = val.notifications || [];
-                        const currentUserIdx = this.data.users.findIndex(u => u.id === this.session.user.id);
-                        if (currentUserIdx !== -1 && !this.data.users[currentUserIdx].uid) {
-                            const newUid = Utils.generateUid();
-                            this.data.users[currentUserIdx].uid = newUid; this.session.user.uid = newUid;
-                            localStorage.setItem('pin_v2_session', JSON.stringify(this.session.user)); this.save();
-                        } else if (currentUserIdx !== -1) {
-                            this.session.user.uid = this.data.users[currentUserIdx].uid;
-                        }
-                    } else { this.save(); }
-                    document.getElementById('loader').style.display = 'none'; App.ui.closeModal('auth-screen'); App.ui.refresh();
-                });
-                setInterval(() => App.notifications.checkDeadlines(), 60000);
+                try {
+                    db.ref('/').on('value', (snapshot) => {
+                        const val = snapshot.val();
+                        if (val) {
+                            this.data.users = val.users || []; this.data.teams = val.teams || []; this.data.events = val.events || []; this.data.notifications = val.notifications || [];
+                            const currentUserIdx = this.data.users.findIndex(u => u.id === this.session.user.id);
+                            if (currentUserIdx !== -1 && !this.data.users[currentUserIdx].uid) {
+                                const newUid = Utils.generateUid();
+                                this.data.users[currentUserIdx].uid = newUid; this.session.user.uid = newUid;
+                                localStorage.setItem('pin_v2_session', JSON.stringify(this.session.user)); this.save();
+                            } else if (currentUserIdx !== -1) {
+                                this.session.user.uid = this.data.users[currentUserIdx].uid;
+                            }
+                        } else { this.save(); }
+                        document.getElementById('loader').style.display = 'none'; App.ui.closeModal('auth-screen'); App.ui.refresh();
+                    });
+                    setInterval(() => App.notifications.checkDeadlines(), 60000);
+                } catch(e) {
+                     console.error("DB Error", e);
+                     document.getElementById('loader').style.display = 'none'; // Все равно убрать лоадер
+                }
             },
-            save() { db.ref('/').set(this.data); },
+            save() { if(db) db.ref('/').set(this.data); },
             getActiveTeam() { return this.session.activeTeamId === 'personal' ? null : this.data.teams.find(t => t.id == this.session.activeTeamId); },
             getFilteredEvents() {
                 return (this.data.events || []).filter(e => {
@@ -516,6 +672,58 @@
                     btnLight.className = `flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all ${!isDark ? active : inactive}`;
                     btnDark.className = `flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all ${isDark ? active : inactive}`;
                 },
+                // --- НОВЫЕ МЕТОДЫ ДЛЯ ОБОЕВ ---
+                applyWallpaper(dataUrl) {
+                    const body = document.body;
+                    if (dataUrl) {
+                        body.style.backgroundImage = `url('${dataUrl}')`;
+                        body.style.backgroundSize = 'cover';
+                        body.style.backgroundPosition = 'center';
+                        body.style.backgroundAttachment = 'fixed';
+                    } else {
+                        body.style.backgroundImage = '';
+                        body.style.backgroundSize = '';
+                        body.style.backgroundPosition = '';
+                        body.style.backgroundAttachment = '';
+                    }
+                },
+                handleWallpaperUpload(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) return App.ui.showToast("Файл слишком большой (макс 5МБ)", "alert");
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const data = e.target.result;
+                        try {
+                            localStorage.setItem('pin_v2_wallpaper', data);
+                            this.applyWallpaper(data);
+                            App.ui.showToast("Обои обновлены", "success");
+                        } catch (err) {
+                            App.ui.showToast("Ошибка сохранения (файл слишком большой)", "alert");
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                },
+                clearWallpaper() {
+                    localStorage.removeItem('pin_v2_wallpaper');
+                    this.applyWallpaper(null);
+                    App.ui.showToast("Обои сброшены", "info");
+                },
+
+                // --- ДОБАВЛЕННАЯ ФУНКЦИЯ ПРОЗРАЧНОСТИ ---
+                setOpacity(value) {
+                    // Устанавливаем CSS переменную
+                    document.documentElement.style.setProperty('--glass-opacity', value);
+
+                    // Обновляем текст процента рядом с ползунком
+                    const display = document.getElementById('opacity-value-display');
+                    if (display) display.innerText = `${Math.round(value * 100)}%`;
+
+                    // Сохраняем в память
+                    localStorage.setItem('pin_v2_opacity', value);
+                },
+                // -------------------------------
                 showToast(msg, type = 'info') {
                     const container = document.getElementById('toast-container'); const toast = document.createElement('div');
                     let bgClass = type === 'alert' ? 'bg-red-500' : (type === 'success' ? 'bg-green-500' : 'bg-slate-800');
@@ -565,6 +773,7 @@
                     const team = Store.getActiveTeam(); const user = Store.session.user; if(!user) return;
                     document.getElementById('current-team-name').innerText = team ? team.name : "Личный календарь";
                     document.getElementById('display-user-name').innerText = user.name; document.getElementById('display-user-avatar').src = user.avatar;
+                    if(document.getElementById('display-user-avatar-mobile')) document.getElementById('display-user-avatar-mobile').src = user.avatar;
                     const isOwner = team && team.ownerId === user.id;
                     document.getElementById('display-role').innerText = team ? (isOwner ? "Admin" : "Member") : "Personal";
                     const btnAdd = document.getElementById('btn-add-teammate'); if (team && isOwner) btnAdd.classList.remove('hidden'); else btnAdd.classList.add('hidden');
@@ -593,11 +802,46 @@
             },
             auth: {
                 isLoginMode: true,
-                toggleMode() { this.isLoginMode = !this.isLoginMode; document.getElementById('auth-title').innerText = this.isLoginMode ? 'Pin Me Up' : 'Регистрация'; document.getElementById('auth-btn-main').innerText = this.isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('auth-switch-btn').innerText = this.isLoginMode ? 'Нет аккаунта?' : 'Есть аккаунт?'; },
+                toggleMode() {
+                    this.isLoginMode = !this.isLoginMode;
+                    document.getElementById('auth-title').innerText = this.isLoginMode ? 'Pin Me Up' : 'Регистрация';
+                    document.getElementById('auth-btn-main').innerText = this.isLoginMode ? 'Войти' : 'Создать аккаунт';
+                    document.getElementById('auth-switch-btn').innerText = this.isLoginMode ? 'Нет аккаунта?' : 'Есть аккаунт?';
+
+                    // ЛОГИКА: Показываем или скрываем поле подтверждения
+                    const confirmInput = document.getElementById('auth-pass-confirm');
+                    if (this.isLoginMode) {
+                        confirmInput.classList.add('hidden');
+                        confirmInput.value = ''; // Очищаем при переключении
+                    } else {
+                        confirmInput.classList.remove('hidden');
+                    }
+                },
                 handle() {
-                    const login = document.getElementById('auth-login').value.trim(); const pass = document.getElementById('auth-pass').value.trim();
+                    const login = document.getElementById('auth-login').value.trim();
+                    const pass = document.getElementById('auth-pass').value.trim();
+                    const passConfirm = document.getElementById('auth-pass-confirm').value.trim();
+
                     if(!login || !pass) return App.ui.showToast("Заполните все поля", "alert");
+
+                    // ЛОГИКА: Проверка совпадения паролей только при регистрации
+                    if (!this.isLoginMode) {
+                        if (pass !== passConfirm) {
+                            return App.ui.showToast("Пароли не совпадают", "alert");
+                        }
+                    }
+
                     const loader = document.getElementById('loader'); loader.style.display = 'flex'; loader.style.opacity = '1';
+
+                    if (!db) {
+                         // Если нет DB (офлайн), просто имитируем вход для демо
+                         setTimeout(() => {
+                             const newUser = { id: Utils.generateId(), name: login, password: pass, avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=" + login, uid: Utils.generateUid() };
+                             this.success(newUser);
+                         }, 1000);
+                         return;
+                    }
+
                     db.ref('users').once('value').then((snapshot) => {
                         const val = snapshot.val(); const users = val ? Object.values(val) : [];
                         loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300);
@@ -625,209 +869,213 @@
                 }
             },
             calendar: {
-                MONTHS: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
-                switchView(viewName) {
-                    Store.session.view = viewName; const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
-                    const labelEl = document.getElementById('current-view-label'); if(labelEl) labelEl.innerText = labels[viewName]; App.ui.closeViewDropdown(); this.render();
-                },
-                navigate(step) {
-                    const d = Store.session.currentDate; const view = Store.session.view;
-                    if (view === 'day') d.setDate(d.getDate() + step); else if (view === 'week') d.setDate(d.getDate() + (step * 7)); else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step); else if (view === 'year') d.setFullYear(d.getFullYear() + step);
-                    Store.session.currentDate = new Date(d); this.render();
-                },
-                createEventCard(ev, dateContext) {
-                    const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext)); const isOverdue = ev.overdue;
-                    let baseClass = "p-1.5 text-left relative z-10 task-card shadow-sm text-[10px] rounded mb-1 truncate ";
-                    if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 "; else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 "; else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 "; else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
-                    const div = document.createElement('div'); div.className = baseClass; div.setAttribute('draggable', 'true'); div.ondragstart = (e) => App.drag.handleDragStart(e, ev); div.ondragend = (e) => App.drag.handleDragEnd(e);
-                    let icon = ""; if(ev.pendingReview && !isDone) icon = "⏳ ";
-                    let content = `<span class="font-black mr-1">${ev.time}</span> ${icon}${Utils.escapeHtml(ev.title)}`;
-                    if (ev.deadline && !isDone && !ev.pendingReview) content += ` <span class="ml-1 text-[9px] font-bold text-red-500" title="Дедлайн: ${ev.deadline.date} ${ev.deadline.time}">🔥</span>`;
-                    div.innerHTML = content; div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
-                    return div;
-                },
-                render() {
-                    const view = Store.session.view; const grid = document.getElementById('calendar-grid'); grid.innerHTML = ''; grid.className = 'animate-grid-entry';
-                    if (view === 'month') this.renderMonth(grid); else if (view === 'week') this.renderWeek(grid); else if (view === 'day') this.renderDay(grid); else if (view === 'year') this.renderYear(grid); else if (view === 'gantt') this.renderGantt(grid);
-                },
-                renderGantt(grid) { /* GANTT CODE OMITTED (Unchanged Logic, just container adaptation handled by CSS) */
-                    const d = Store.session.currentDate;
-                    document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()} (Гант)`;
-                    grid.className = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden h-full max-h-[calc(100vh-200px)]";
-                    // ... (rest of gantt logic is fine, just ensure overflow works)
-                    const year = d.getFullYear(); const month = d.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const dayWidth = 40;
-                    const header = document.createElement('div'); header.className = "flex border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden";
-                    const titleSpacer = document.createElement('div'); titleSpacer.className = "w-64 shrink-0 p-4 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 font-bold text-xs uppercase text-slate-400"; titleSpacer.innerText = "Задача"; header.appendChild(titleSpacer);
-                    const daysContainer = document.createElement('div'); daysContainer.className = "flex overflow-hidden relative";
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const dayCol = document.createElement('div'); const isToday = Utils.areDatesEqual(new Date(year, month, i), new Date());
-                        dayCol.style.width = `${dayWidth}px`; dayCol.className = `shrink-0 text-center py-3 border-r border-slate-100 dark:border-slate-800 text-[10px] font-bold ${isToday ? 'bg-rose-50 text-rose-500' : 'text-slate-400'}`;
-                        dayCol.innerText = i; daysContainer.appendChild(dayCol);
-                    }
-                    header.appendChild(daysContainer); grid.appendChild(header);
-                    const body = document.createElement('div'); body.className = "flex flex-1 overflow-y-auto custom-scrollbar relative";
-                    const taskList = document.createElement('div'); taskList.className = "w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10";
-                    const timeline = document.createElement('div'); timeline.className = "flex relative overflow-x-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-800/20"; timeline.style.width = `${daysInMonth * dayWidth}px`;
-                    const bgGrid = document.createElement('div'); bgGrid.className = "absolute inset-0 flex pointer-events-none";
-                    for (let i = 1; i <= daysInMonth; i++) { const line = document.createElement('div'); line.style.width = `${dayWidth}px`; line.className = "shrink-0 border-r border-slate-100 dark:border-slate-800/50 h-full"; bgGrid.appendChild(line); }
-                    timeline.appendChild(bgGrid);
-                    const allEvents = Store.getFilteredEvents(); const eventsInMonth = allEvents.filter(ev => { const start = new Date(ev.dateStr); let end = start; if (ev.deadline) end = new Date(ev.deadline.date); const monthStart = new Date(year, month, 1); const monthEnd = new Date(year, month, daysInMonth); return start <= monthEnd && end >= monthStart; });
-                    eventsInMonth.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
-                    eventsInMonth.forEach(ev => {
-                        const rowTitle = document.createElement('div'); rowTitle.className = "h-10 px-4 flex items-center border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 truncate hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors";
-                        rowTitle.innerHTML = `<span class="truncate">${Utils.escapeHtml(ev.title)}</span>`; rowTitle.onclick = () => App.events.openModal(new Date(ev.dateStr), ev); taskList.appendChild(rowTitle);
-                        const rowTrack = document.createElement('div'); rowTrack.className = "h-10 relative w-full border-b border-transparent group";
-                        const startObj = new Date(ev.dateStr); let endObj = ev.deadline ? new Date(ev.deadline.date) : new Date(ev.dateStr); if (endObj < startObj) endObj = startObj;
-                        let renderStart = startObj.getDate(); let renderEnd = endObj.getDate(); let isStartCut = false; let isEndCut = false;
-                        if (startObj.getMonth() < month || startObj.getFullYear() < year) { renderStart = 1; isStartCut = true; } else if (startObj.getMonth() > month || startObj.getFullYear() > year) { return; }
-                        if (endObj.getMonth() > month || endObj.getFullYear() > year) { renderEnd = daysInMonth; isEndCut = true; }
-                        const durationDays = renderEnd - renderStart + 1; const leftPos = (renderStart - 1) * dayWidth; const widthPx = durationDays * dayWidth - 4;
-                        let barColor = "bg-rose-500"; if (ev.completed) barColor = "bg-green-500 opacity-60"; else if (ev.overdue) barColor = "bg-red-500"; else if (ev.pendingReview) barColor = "bg-amber-400"; else if (Store.session.activeTeamId === 'personal') barColor = "bg-indigo-500";
-                        const bar = document.createElement('div'); bar.className = `absolute top-2 h-6 rounded-md shadow-sm text-[10px] text-white flex items-center px-2 cursor-pointer hover:brightness-110 transition-all ${barColor}`;
-                        bar.style.left = `${leftPos + 2}px`; bar.style.width = `${widthPx}px`;
-                        if (durationDays > 1) { bar.innerHTML = `<span class="truncate w-full font-bold">${isStartCut ? '← ' : ''}${Utils.escapeHtml(ev.title)}${isEndCut ? ' →' : ''}</span>`; }
-                        bar.onclick = () => App.events.openModal(new Date(ev.dateStr), ev); bar.title = `${ev.title} (${ev.dateStr} - ${ev.deadline ? ev.deadline.date : ev.dateStr})`;
-                        rowTrack.appendChild(bar); timeline.appendChild(rowTrack);
-                    });
-                    const scrollSync = document.createElement('div'); scrollSync.className = "flex-1 overflow-x-auto custom-scrollbar"; scrollSync.onscroll = (e) => { daysContainer.style.transform = `translateX(-${e.target.scrollLeft}px)`; };
-                    scrollSync.appendChild(timeline); body.appendChild(taskList); body.appendChild(scrollSync); grid.appendChild(body);
-                },
+    MONTHS: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
 
-                renderMonth(grid) {
-                    const d = Store.session.currentDate;
-                    document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    switchView(viewName) {
+        Store.session.view = viewName; const labels = { 'day': 'День', 'week': 'Неделя', 'month': 'Месяц', 'year': 'Год', 'gantt': 'Гант' };
+        const labelEl = document.getElementById('current-view-label'); if(labelEl) labelEl.innerText = labels[viewName]; App.ui.closeViewDropdown(); this.render();
+    },
 
-                    // RESPONSIVE CHANGE: grid-cols-1 for mobile, grid-cols-7 for desktop
-                    grid.className += " grid grid-cols-1 md:grid-cols-7 gap-4 pb-10";
+    navigate(step) {
+        const d = Store.session.currentDate; const view = Store.session.view;
+        if (view === 'day') d.setDate(d.getDate() + step); else if (view === 'week') d.setDate(d.getDate() + (step * 7)); else if (view === 'month' || view === 'gantt') d.setMonth(d.getMonth() + step); else if (view === 'year') d.setFullYear(d.getFullYear() + step);
+        Store.session.currentDate = new Date(d); this.render();
+    },
 
-                    const fragment = document.createDocumentFragment();
-                    ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(day => {
-                        const el = document.createElement('div');
-                        // Hide weekday headers on mobile
-                        el.className = 'hidden md:block text-center text-[10px] font-black text-slate-400 pb-4 uppercase tracking-widest';
-                        el.innerText = day;
-                        fragment.appendChild(el);
-                    });
+    // Вспомогательная функция создания ячейки дня
+    createDayCell(dateObj, isCurrentMonth, allEvents) {
+        const isToday = Utils.areDatesEqual(dateObj, new Date());
+        const dayName = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'][dateObj.getDay()];
 
-                    const year = d.getFullYear(), month = d.getMonth();
-                    const firstDayIndex = new Date(year, month, 1).getDay();
-                    const shiftedIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const cell = document.createElement('div');
 
-                    // Spacer divs hidden on mobile
-                    for (let x = 0; x < shiftedIndex; x++) {
-                        const spacer = document.createElement('div');
-                        spacer.className = "hidden md:block";
-                        fragment.appendChild(spacer);
-                    }
+        // Стилизация: если не текущий месяц, делаем тусклее и меняем фон
+        let baseClasses = "rounded-[1.5rem] border p-3 min-h-[100px] md:min-h-[140px] shadow-sm transition-all relative group overflow-hidden flex flex-col ";
 
-                    const allEvents = Store.getFilteredEvents();
-                    const dayNames = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+        if (isCurrentMonth) {
+            // Стиль для текущего месяца (как было раньше)
+            baseClasses += `glass hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${isToday ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-slate-100 dark:border-slate-800'}`;
+        } else {
+            // Стиль для соседних месяцев (тусклые, скрыты на мобильных, чтобы не засорять ленту)
+            baseClasses += "hidden md:flex bg-slate-100/50 dark:bg-slate-900/30 border-transparent opacity-60 hover:opacity-100 cursor-pointer hover:bg-white dark:hover:bg-slate-800 border-slate-100 dark:border-slate-800";
+        }
 
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const dateObj = new Date(year, month, i);
-                        const isToday = Utils.areDatesEqual(dateObj, new Date());
-                        const dayName = dayNames[dateObj.getDay()];
+        cell.className = baseClasses;
 
-                        const cell = document.createElement('div');
-                        // Responsive height: auto on mobile to fit content, fixed min-height on desktop
-                        cell.className = `bg-white dark:bg-slate-900 rounded-[1.5rem] border ${isToday ? 'border-rose-500 ring-4 ring-rose-500/10' : 'border-slate-100 dark:border-slate-800'} p-3 min-h-[100px] md:min-h-[140px] shadow-sm hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 cursor-pointer transition-all relative group overflow-hidden flex flex-col`;
+        cell.ondragover = (e) => App.drag.handleDragOver(e);
+        cell.ondragleave = (e) => App.drag.handleDragLeave(e);
+        cell.ondrop = (e) => App.drag.handleDrop(e, dateObj, null);
+        cell.onclick = () => App.events.openModal(dateObj);
 
-                        cell.ondragover = (e) => App.drag.handleDragOver(e);
-                        cell.ondragleave = (e) => App.drag.handleDragLeave(e);
-                        cell.ondrop = (e) => App.drag.handleDrop(e, dateObj, null);
+        // Рендеринг содержимого ячейки
+        cell.innerHTML = `
+            <div class="flex justify-between items-baseline mb-2">
+                <span class="text-sm font-black ${isToday ? 'text-rose-500' : (isCurrentMonth ? 'text-slate-300 dark:text-slate-700' : 'text-slate-300 dark:text-slate-700')}">${dateObj.getDate()}</span>
+                <span class="md:hidden text-[10px] uppercase font-bold text-slate-400">${dayName}</span>
+            </div>
+        `;
 
-                        cell.onclick = () => App.events.openModal(dateObj);
+        const dayEvents = allEvents.filter(e => Utils.isEventVisible(e, dateObj));
+        dayEvents.sort((a,b) => a.time.localeCompare(b.time));
+        dayEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, dateObj)));
 
-                        // Responsive header inside cell
-                        cell.innerHTML = `
-                            <div class="flex justify-between items-baseline mb-2">
-                                <span class="text-sm font-black ${isToday ? 'text-rose-500' : 'text-slate-300 dark:text-slate-700'}">${i}</span>
-                                <span class="md:hidden text-[10px] uppercase font-bold text-slate-400">${dayName}</span>
-                            </div>
-                        `;
+        return cell;
+    },
 
-                        const dayEvents = allEvents.filter(e => Utils.isEventVisible(e, dateObj));
-                        dayEvents.sort((a,b) => a.time.localeCompare(b.time));
-                        dayEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, dateObj)));
-                        fragment.appendChild(cell);
-                    }
-                    grid.appendChild(fragment);
-                },
+    createEventCard(ev, dateContext) {
+        const isDone = Utils.isEventCompleted(ev, Utils.formatDateForInput(dateContext)); const isOverdue = ev.overdue;
+        let baseClass = "p-1.5 text-left relative z-10 task-card shadow-sm text-[10px] rounded mb-1 truncate ";
+        if (isDone) baseClass += "task-done bg-slate-50 dark:bg-slate-800 text-slate-400 border-l-2 border-green-500 "; else if (ev.pendingReview) baseClass += "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-l-2 border-amber-500 "; else if (isOverdue) baseClass += "task-overdue bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-l-2 border-red-500 "; else baseClass += Store.session.activeTeamId === 'personal' ? "bg-indigo-50 dark:bg-indigo-900/30 border-l-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 " : "bg-rose-50 dark:bg-rose-900/30 border-l-2 border-rose-500 text-rose-900 dark:text-rose-200 ";
+        const div = document.createElement('div'); div.className = baseClass; div.setAttribute('draggable', 'true'); div.ondragstart = (e) => App.drag.handleDragStart(e, ev); div.ondragend = (e) => App.drag.handleDragEnd(e);
+        let icon = ""; if(ev.pendingReview && !isDone) icon = "⏳ ";
+        let content = `<span class="font-black mr-1">${ev.time}</span> ${icon}${Utils.escapeHtml(ev.title)}`;
+        if (ev.deadline && !isDone && !ev.pendingReview) content += ` <span class="ml-1 text-[9px] font-bold text-red-500" title="Дедлайн: ${ev.deadline.date} ${ev.deadline.time}">🔥</span>`;
+        div.innerHTML = content; div.onclick = (e) => { e.stopPropagation(); App.events.openModal(dateContext, ev); };
+        return div;
+    },
+
+    render() {
+        const view = Store.session.view; const grid = document.getElementById('calendar-grid'); grid.innerHTML = ''; grid.className = 'animate-grid-entry';
+        if (view === 'month') this.renderMonth(grid); else if (view === 'week') this.renderWeek(grid); else if (view === 'day') this.renderDay(grid); else if (view === 'year') this.renderYear(grid); else if (view === 'gantt') this.renderGantt(grid);
+    },
+
+    // Оставим Gantt без изменений, он длинный, скопируйте его из исходника если нужно, или он останется в памяти браузера,
+    // но лучше убедиться, что он есть в коде. В данном ответе я сокращу его для ясности изменений в renderMonth.
+    // Если вы копируете весь объект, убедитесь, что renderGantt, renderWeek, renderDay, renderYear остались на месте.
+    // Ниже приведен полный renderMonth с изменениями:
+
+    renderMonth(grid) {
+        const d = Store.session.currentDate;
+        document.getElementById('current-date-display').innerText = `${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+        grid.className += " grid grid-cols-1 md:grid-cols-7 gap-4 pb-10";
+
+        const fragment = document.createDocumentFragment();
+        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(day => {
+            const el = document.createElement('div');
+            el.className = 'hidden md:block text-center text-[10px] font-black text-slate-400 pb-4 uppercase tracking-widest';
+            el.innerText = day;
+            fragment.appendChild(el);
+        });
+
+        const year = d.getFullYear(), month = d.getMonth();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const shiftedIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1; // 0 = Пн
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const allEvents = Store.getFilteredEvents();
+
+        // 1. Дни ПРЕДЫДУЩЕГО месяца
+        const prevMonthLastDate = new Date(year, month, 0).getDate(); // Последнее число пред. месяца
+
+        for (let x = 0; x < shiftedIndex; x++) {
+            // Вычисляем число: (последний день - смещение + 1 + индекс)
+            const dayNum = prevMonthLastDate - shiftedIndex + 1 + x;
+            const dateObj = new Date(year, month - 1, dayNum);
+
+            // Создаем ячейку как "не текущий месяц"
+            fragment.appendChild(this.createDayCell(dateObj, false, allEvents));
+        }
+
+        // 2. Дни ТЕКУЩЕГО месяца
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateObj = new Date(year, month, i);
+            // Создаем ячейку как "текущий месяц"
+            fragment.appendChild(this.createDayCell(dateObj, true, allEvents));
+        }
+
+        // 3. Дни СЛЕДУЮЩЕГО месяца (добиваем сетку)
+        const totalCellsSoFar = shiftedIndex + daysInMonth;
+        // Нам нужно, чтобы сетка была ровной (кратной 7)
+        const cellsToFill = (7 - (totalCellsSoFar % 7)) % 7;
+
+        // Опционально: можно добавить еще строку, если месяц занимает мало места,
+        // чтобы высота календаря не прыгала, но пока заполним просто до конца недели.
+
+        for (let j = 1; j <= cellsToFill; j++) {
+            const dateObj = new Date(year, month + 1, j);
+            fragment.appendChild(this.createDayCell(dateObj, false, allEvents));
+        }
+
+        grid.appendChild(fragment);
+    },
 
                 renderWeek(grid) {
-                    const d = Store.session.currentDate;
-                    const startOfWeek = Utils.getWeekStart(d);
-                    const endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    const d = Store.session.currentDate;
+    const startOfWeek = Utils.getWeekStart(d);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
 
-                    document.getElementById('current-date-display').innerText = `${startOfWeek.getDate()} ${this.MONTHS[startOfWeek.getMonth()].substr(0,3)} - ${endOfWeek.getDate()} ${this.MONTHS[endOfWeek.getMonth()].substr(0,3)} ${endOfWeek.getFullYear()}`;
+    // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Получаем номер недели и добавляем в заголовок ---
+    const weekNum = Utils.getWeekNumber(startOfWeek);
 
-                    // Make Week view scrollable horizontally on mobile
-                    grid.className += " overflow-x-auto";
+    document.getElementById('current-date-display').innerText =
+        `Неделя ${weekNum} • ${startOfWeek.getDate()} ${this.MONTHS[startOfWeek.getMonth()].substr(0,3)} - ${endOfWeek.getDate()} ${this.MONTHS[endOfWeek.getMonth()].substr(0,3)} ${endOfWeek.getFullYear()}`;
+    // -----------------------------------------------------------------------
 
-                    // Container for the grid to ensure min-width on mobile
-                    const container = document.createElement('div');
-                    container.className = "grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm min-w-[800px] md:min-w-0";
+    grid.className += " overflow-x-auto";
 
-                    container.appendChild(document.createElement('div'));
-                    for (let i = 0; i < 7; i++) {
-                        const curr = new Date(startOfWeek);
-                        curr.setDate(curr.getDate() + i);
-                        const isToday = Utils.areDatesEqual(curr, new Date());
-                        const head = document.createElement('div');
+    const container = document.createElement('div');
+    container.className = "glass grid grid-cols-[50px_repeat(7,1fr)] gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm min-w-[800px] md:min-w-0";
 
-                        if(isToday) {
-                            head.className = "text-center py-4 border-b border-l border-rose-500 bg-rose-500 text-white";
-                            head.innerHTML = `<div class="text-[10px] font-black text-rose-200 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-white">${curr.getDate()}</div>`;
-                        } else {
-                            head.className = "text-center py-4 border-b border-l border-slate-100 dark:border-slate-800";
-                            head.innerHTML = `<div class="text-[10px] font-black text-slate-400 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-slate-700 dark:text-slate-300">${curr.getDate()}</div>`;
-                        }
-                        container.appendChild(head);
-                    }
+    container.appendChild(document.createElement('div'));
+    for (let i = 0; i < 7; i++) {
+        const curr = new Date(startOfWeek);
+        curr.setDate(curr.getDate() + i);
+        const isToday = Utils.areDatesEqual(curr, new Date());
+        const head = document.createElement('div');
 
-                    const allEvents = Store.getFilteredEvents();
+        if(isToday) {
+            head.className = "text-center py-4 border-b border-l border-rose-500 bg-rose-500 text-white";
+            head.innerHTML = `<div class="text-[10px] font-black text-rose-200 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-white">${curr.getDate()}</div>`;
+        } else {
+            head.className = "text-center py-4 border-b border-l border-slate-100 dark:border-slate-800";
+            head.innerHTML = `<div class="text-[10px] font-black text-slate-400 uppercase">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i]}</div><div class="text-xl font-black text-slate-700 dark:text-slate-300">${curr.getDate()}</div>`;
+        }
+        container.appendChild(head);
+    }
 
-                    for (let hour = 0; hour < 24; hour++) {
-                        const timeLabel = document.createElement('div');
-                        timeLabel.className = "text-[10px] font-bold text-slate-400 text-right pr-2 pt-2 border-b border-slate-100 dark:border-slate-800 h-24";
-                        timeLabel.innerText = `${hour}:00`;
-                        container.appendChild(timeLabel);
+    const allEvents = Store.getFilteredEvents();
 
-                        for (let day = 0; day < 7; day++) {
-                            const curr = new Date(startOfWeek);
-                            curr.setDate(curr.getDate() + day);
+    for (let hour = 0; hour < 24; hour++) {
+        const timeLabel = document.createElement('div');
+        timeLabel.className = "text-[10px] font-bold text-slate-400 text-right pr-2 pt-2 border-b border-slate-100 dark:border-slate-800 h-24";
+        timeLabel.innerText = `${hour}:00`;
+        container.appendChild(timeLabel);
 
-                            const cell = document.createElement('div');
-                            cell.className = "border-b border-l border-slate-100 dark:border-slate-800 h-24 relative hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors p-1 overflow-y-auto custom-scrollbar";
+        for (let day = 0; day < 7; day++) {
+            const curr = new Date(startOfWeek);
+            curr.setDate(curr.getDate() + day);
 
-                            cell.ondragover = (e) => App.drag.handleDragOver(e);
-                            cell.ondragleave = (e) => App.drag.handleDragLeave(e);
-                            cell.ondrop = (e) => App.drag.handleDrop(e, curr, `${String(hour).padStart(2,'0')}:00`);
+            const cell = document.createElement('div');
+            cell.className = "border-b border-l border-slate-100 dark:border-slate-800 h-24 relative hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors p-1 overflow-y-auto custom-scrollbar";
 
-                            cell.onclick = () => {
-                                const targetDate = new Date(curr);
-                                App.events.openModal(targetDate, null, `${String(hour).padStart(2,'0')}:00`);
-                            };
+            cell.ondragover = (e) => App.drag.handleDragOver(e);
+            cell.ondragleave = (e) => App.drag.handleDragLeave(e);
+            cell.ondrop = (e) => App.drag.handleDrop(e, curr, `${String(hour).padStart(2,'0')}:00`);
 
-                            const hourEvents = allEvents.filter(e => {
-                                const isVisible = Utils.isEventVisible(e, curr);
-                                const eHour = parseInt(e.time.split(':')[0]);
-                                return isVisible && eHour === hour;
-                            });
+            cell.onclick = () => {
+                const targetDate = new Date(curr);
+                App.events.openModal(targetDate, null, `${String(hour).padStart(2,'0')}:00`);
+            };
 
-                            hourEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, curr)));
-                            container.appendChild(cell);
-                        }
-                    }
-                    grid.appendChild(container);
-                },
+            const hourEvents = allEvents.filter(e => {
+                const isVisible = Utils.isEventVisible(e, curr);
+                const eHour = parseInt(e.time.split(':')[0]);
+                return isVisible && eHour === hour;
+            });
+
+            hourEvents.forEach(ev => cell.appendChild(this.createEventCard(ev, curr)));
+            container.appendChild(cell);
+        }
+    }
+    grid.appendChild(container);
+},
 
                 renderDay(grid) {
                     const d = Store.session.currentDate;
                     document.getElementById('current-date-display').innerText = `${d.getDate()} ${this.MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-                    grid.className += " max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden";
+                    // ИСПРАВЛЕНИЕ: Заменили bg-white dark:bg-slate-900 на glass
+                    grid.className += " max-w-3xl mx-auto glass rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden";
 
                     const isToday = Utils.areDatesEqual(d, new Date());
                     const head = document.createElement('div');
@@ -883,13 +1131,14 @@
                 renderYear(grid) {
                     const year = Store.session.currentDate.getFullYear();
                     document.getElementById('current-date-display').innerText = `${year}`;
-                    grid.className += " grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10"; // Responsive Columns
+                    grid.className += " grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10";
 
                     const allEvents = Store.getFilteredEvents();
 
                     for(let m=0; m<12; m++) {
                         const monthContainer = document.createElement('div');
-                        monthContainer.className = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-lg transition-all relative hover:border-rose-400";
+                        // ИСПРАВЛЕНИЕ: Заменили bg-white dark:bg-slate-900 на glass
+                        monthContainer.className = "glass rounded-2xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-lg transition-all relative hover:border-rose-400";
                         monthContainer.onclick = () => { Store.session.currentDate.setMonth(m); this.switchView('month'); };
 
                         const title = document.createElement('h4');
